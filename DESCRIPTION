@@ -1,0 +1,33 @@
+Package: ssstats
+Type: Package
+Title: Introductory Biostatistics Functions for Students Using R
+Version: 0.1.0
+Authors@R: 
+  c(
+    person(given = "Ihsan",
+           family = "Buker",
+           role = c("aut", "cre"),
+           email = "iebuker@uab.edu"),
+    person(given = "Samantha",
+           family = "Seals",
+           role = "aut",
+           email = "sseals@uwf.edu")
+  )
+Description: This package helps students get acclimated to R programming in introductory biostatistics courses by combining commonly used statistical tasks and duties into easy-to-use functions.
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+Imports: 
+    ggpubr,
+    ggplot2,
+    tidyr,
+    dplyr,
+    magrittr,
+    rlang,
+    scales,
+    glue
+RoxygenNote: 7.3.2
+Suggests: 
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
