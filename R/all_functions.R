@@ -894,7 +894,7 @@ independent_qq <- function(data, continuous, grouping) {
 #' @examples
 #' dependent_qq_plot(a1c_measurements, "first_measurement", "second_measurement")
 #' @export
-dependent_qq <- function(data, col1, col1) {
+dependent_qq <- function(data, col1, col2) {
   # Capture expressions
   var1_q <- rlang::enquo(col1)
   var2_q <- rlang::enquo(col2)
