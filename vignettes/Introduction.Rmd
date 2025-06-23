@@ -94,7 +94,7 @@ one_prop_CI(data = penguins_clean, grouping = species, success = "Adelie", confi
 Suppose we want to compare bill length between male and female penguins. First, check the assumption of within-group normality using QQ plots:
 
 ```{r}
-independent_qq_plot(penguins_clean, variable = "bill_length_mm", group = "sex")
+independent_qq(penguins_clean, continuous = bill_length_mm, grouping = sex)
 ```
 
 The QQ plots suggest deviations from normality, but with a large enough sample size, the Central Limit Theorem justifies using a t-test. Please note that this example is for illustration only. In practice, a non-parametric test may be more appropriate.
@@ -104,8 +104,8 @@ Now perform a two-sample t-test assuming equal variance:
 ```{r}
 independent_mean_HT(
   penguins_clean,
-  continuous = "bill_length_mm",
-  grouping = "sex",
+  continuous = bill_length_mm,
+  grouping = sex,
   alternative = "two.sided",
   alpha = 0.05,
   variance = "equal"
@@ -207,7 +207,7 @@ Let us begin by examining the distribution of the difference between the post- a
 dependent_mean_median(data, col1 = pre, col2 = post, accuracy = 3)
 
 # Examine QQ plot of the difference (post - pre)
-dependent_qq_plot(data, var1 = "pre", var2 = "post")
+dependent_qq(data, col1 = pre, col2 = post)
 ```
 
 Assuming that all appropriate criteria for a t-test are met, we can proceed with the dependent t-test. 
