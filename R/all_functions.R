@@ -828,7 +828,7 @@ one_qq_plot <- function(data, variable) {
                   title = paste("QQ Plot for", variable))
 }
 
-#' independent_qq_plot
+#' independent_qq
 #'
 #' Constructs QQ plots for two independent samples based on a grouping variable.
 #'
@@ -883,7 +883,7 @@ independent_qq <- function(data, continuous, grouping) {
   ggpubr::ggarrange(plotlist = c(plots, plots2))
 }
 
-#' dependent_qq_plot
+#' dependent_qq
 #'
 #' Constructs a QQ plot for the difference scores between two paired measurements.
 #'
@@ -935,7 +935,17 @@ dependent_qq <- function(data, col1, col2) {
 }
 
 
-
+#' plot_residuals
+#'
+#' Constructs a scatterplot of residuals by groups for use in determining equality of variance.
+#'
+#' @param data A data frame in long format.
+#' @param continuous A string specifying the column name of the outcome variable.
+#' @param grouping A string specifying the column name of the grouping variable (should have exactly 2 levels).
+#' @return A ggplot2 object with a scatterplot.
+#' @examples
+#' plot_residuals(penguins, "bill_length_mm", "sex")
+#' @export
 plot_residuals <- function(data, continuous, grouping) {
   grouping_q <- enquo(grouping)
   outcome_q  <- enquo(continuous)
@@ -955,9 +965,16 @@ plot_residuals <- function(data, continuous, grouping) {
 }
 
 
-
-
-
+#' variances_HT
+#'
+#' Constructs QQ plots for two independent samples based on a grouping variable.
+#'
+#' @param data Data frame or tibble.
+#' @param grouping Unquoted column name for grouping variable (factor).
+#' @param continuous Unquoted column name for continuous outcome.
+#' @param alpha Numeric significance level (default 0.05).
+#' @return None. Prints formatted test results and conclusion.
+#' @export
 variances_HT <- function(data, continuous, grouping, alpha = 0.05) {
 
   # Capture column names
