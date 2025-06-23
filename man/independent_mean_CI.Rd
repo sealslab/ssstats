@@ -4,7 +4,13 @@
 \alias{independent_mean_CI}
 \title{Independent samples mean confidence interval (equal variance assumed)}
 \usage{
-independent_mean_CI(data, grouping, continuous, confidence = 0.95)
+independent_mean_CI(
+  data,
+  grouping,
+  continuous,
+  confidence = 0.95,
+  variance = "equal"
+)
 }
 \arguments{
 \item{data}{Data frame or tibble.}

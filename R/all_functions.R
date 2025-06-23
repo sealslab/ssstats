@@ -974,6 +974,7 @@ plot_residuals <- function(data, continuous, grouping) {
 #' @param continuous Unquoted column name for continuous outcome.
 #' @param alpha Numeric significance level (default 0.05).
 #' @return None. Prints formatted test results and conclusion.
+#' @import glue
 #' @export
 variances_HT <- function(data, continuous, grouping, alpha = 0.05) {
 
