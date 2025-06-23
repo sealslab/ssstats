@@ -1028,3 +1028,83 @@ variances_HT <- function(data, continuous, grouping, alpha = 0.05) {
   conclusion(p_val, alpha)
 }
 
+#' independent_median_HT
+#'
+#' @param data Data frame or tibble.
+#' @param grouping Unquoted column name for grouping variable (factor).
+#' @param continuous Unquoted column name for continuous outcome.
+#' @param alternative Character string specifying alternative hypothesis; "two.sided", "less", or "greater" (default "two.sided").
+#' @param m Numeric hypothesized median difference (default 0).
+#' @param alpha Numeric significance level (default 0.05).
+#' @return None. Prints formatted test results and conclusion.
+#' @import glue
+#' @export
+independent_median_HT <- function(data,
+                                  grouping,
+                                  continuous,
+                                  alternative = "two",
+                                  m = 0,
+                                  alpha = 0.05) {
+  
+  
+  # Capture the variables
+  grouping_q   <- enquo(grouping)
+  continuous_q <- enquo(continuous)
+  
+  # Prepare the dataset
+  df <- data %>%
+    dplyr::select(!!grouping_q, !!continuous_q) %>%
+    tidyr::drop_na()
+  
+  grp_name  <- quo_name(grouping_q)
+  cont_name <- quo_name(continuous_q)
+  
+  # Create formula
+  fml <- stats::reformulate(termlabels = grp_name, response = cont_name)
+  
+  # Run Wilcoxon Rank Sum test
+  w_test <- wilcox.test(
+    formula = fml,
+    data = df,
+    alternative = alternative,
+    conf.int = TRUE,
+    conf.level = 1 - alpha,
+    mu = m,
+    exact = FALSE
+  )
+  
+  w_stat <- round(w_test$statistic, 3)
+  p_val  <- w_test$p.value
+  
+  p_text <- if (p_val < 0.001) {
+    "p < 0.001"
+  } else {
+    glue("p = {formatC(round(p_val, 3), format = 'f', digits = 3)}")
+  }
+  
+  null_text <- switch(
+    alternative,
+    two = glue("H₀: M₁ - M₂ = {m}"),
+    two.sided = glue("H₀: M₁ - M₂ = {m}"),
+    less = glue("H₀: M₁ - M₂ ≥ {m}"),
+    greater = glue("H₀: M₁ - M₂ ≤ {m}"),
+    stop("`alternative` must be one of \"two\", \"less\", \"greater\"")
+  )
+  
+  alt_text <- switch(
+    alternative,
+    two = glue("H₀: M₁ - M₂ = {m}"),
+    two.sided = glue("H₁: M₁ - M₂ ≠ {m}"),
+    less = glue("H₁: M₁ - M₂ < {m}"),
+    greater = glue("H₁: M₁ - M₂ > {m}"),
+    stop("`alternative` must be one of \"two\", \"less\", \"greater\"")
+  )
+  
+  cat(glue("Wilcoxon Rank Sum Test:\n\n"))
+  cat(glue("Null: {null_text}\n\n"))
+  cat(glue("Alternative: {alt_text}\n\n"))
+  cat(glue("Test statistic: T = {w_stat}\n\n"))
+  cat(glue("p-value: {p_text}\n\n"))
+  
+  conclusion(p_val, alpha)
+}
