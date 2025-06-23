@@ -327,9 +327,11 @@ one_prop_HT <- function(data, grouping, success, p = 0.5, alternative = "two.sid
 #' @param confidence Confidence level for interval (default 0.95).
 #' @return None. Prints the confidence interval and point estimate.
 #' @export
-independent_mean_CI <- function(data, grouping, continuous, confidence = 0.95) {
+independent_mean_CI <- function(data, grouping, continuous, confidence = 0.95, variance = "equal") {
   grouping_q  <- rlang::enquo(grouping)
   continuous_q <- rlang::enquo(continuous)
+  
+  var_equal <- ifelse(variance == "equal", TRUE, FALSE)
 
   df <- data %>% dplyr::select(!!grouping_q, !!continuous_q) %>% tidyr::drop_na()
 
@@ -342,7 +344,7 @@ independent_mean_CI <- function(data, grouping, continuous, confidence = 0.95) {
     formula   = fml,
     data      = data,
     conf.level= confidence,
-    var.equal = TRUE
+    var.equal = var_equal
   )
 
   conf_pct <- round(confidence * 100)
@@ -837,27 +839,48 @@ one_qq_plot <- function(data, variable) {
 #' @examples
 #' independent_qq_plot(penguins, "bill_length_mm", "sex")
 #' @export
-independent_qq_plot <- function(data, variable, group) {
-  if (!group %in% names(data)) {
-    stop("Grouping variable not found in the data.")
-  }
-
-  levels_group <- unique(na.omit(data[[group]]))
+independent_qq <- function(data, continuous, grouping) {
+  # Capture variables using tidy evaluation
+  variable_q <- rlang::enquo(continuous)
+  group_q    <- rlang::enquo(grouping)
+  
+  # Extract column names as characters for later labeling
+  variable_name <- rlang::as_name(variable_q)
+  group_name    <- rlang::as_name(group_q)
+  
+  # Filter out missing group values and get group levels
+  levels_group <- data %>%
+    dplyr::filter(!is.na(!!group_q)) %>%
+    dplyr::pull(!!group_q) %>%
+    unique()
+  
   if (length(levels_group) != 2) {
     stop(paste("Grouping variable must have exactly 2 levels. Found:", paste(levels_group, collapse = ", ")))
   }
-
+  
+  # Create QQ plots
   plots <- lapply(levels_group, function(level_val) {
-    ggplot2::ggplot(data[data[[group]] == level_val, ],
-                    ggplot2::aes(sample = .data[[variable]])) +
+    ggplot2::ggplot(dplyr::filter(data, !!group_q == level_val),
+                    ggplot2::aes(sample = !!variable_q)) +
       ggplot2::stat_qq_line(linetype = "dashed", color = "black", linewidth = 1) +
-      ggplot2::stat_qq(color = "#6A6C6E") +
+      ggplot2::stat_qq(color = "#666666") +
       ggplot2::theme_bw() +
-      ggplot2::labs(title = paste("QQ Plot for", variable, "|", group, "=", level_val),
+      ggplot2::labs(title = paste("QQ Plot for", variable_name, "|", group_name, "=", level_val),
                     x = "Theoretical Quantiles", y = "Sample Quantiles")
   })
-
-  ggpubr::ggarrange(plotlist = plots)
+  
+  # Create histograms
+  plots2 <- lapply(levels_group, function(level_val) {
+    ggplot2::ggplot(dplyr::filter(data, !!group_q == level_val),
+                    ggplot2::aes(x = !!variable_q)) +
+      ggplot2::geom_histogram(color = "black", fill = "#666666", bins = 30) +
+      ggplot2::theme_bw() +
+      ggplot2::labs(title = paste("Histogram for", variable_name, "|", group_name, "=", level_val),
+                    x = variable_name, y = "Count")
+  })
+  
+  # Combine and arrange plots
+  ggpubr::ggarrange(plotlist = c(plots, plots2))
 }
 
 #' dependent_qq_plot
@@ -865,23 +888,125 @@ independent_qq_plot <- function(data, variable, group) {
 #' Constructs a QQ plot for the difference scores between two paired measurements.
 #'
 #' @param data A data frame in wide format.
-#' @param var1 A string specifying the column name of the first measurement.
-#' @param var2 A string specifying the column name of the second measurement.
+#' @param col1 A string specifying the column name of the first measurement.
+#' @param col2 A string specifying the column name of the second measurement.
 #' @return A ggplot object representing the QQ plot of the paired differences.
 #' @examples
 #' dependent_qq_plot(a1c_measurements, "first_measurement", "second_measurement")
 #' @export
-dependent_qq_plot <- function(data, var1, var2) {
-  if (!all(c(var1, var2) %in% names(data))) {
-    stop("Both variables must be present in the data.")
-  }
-
-  diff_vec <- data[[var1]] - data[[var2]]
-
-  ggplot2::ggplot(data.frame(diff = diff_vec), ggplot2::aes(sample = diff)) +
+dependent_qq <- function(data, col1, col1) {
+  # Capture expressions
+  var1_q <- rlang::enquo(col1)
+  var2_q <- rlang::enquo(col2)
+  
+  # Get variable names as strings (for labeling)
+  var1_name <- rlang::as_name(var1_q)
+  var2_name <- rlang::as_name(var2_q)
+  
+  # Calculate differences
+  diff_df <- data %>%
+    dplyr::mutate(diff = !!var1_q - !!var2_q) %>%
+    dplyr::select(diff) %>%
+    dplyr::filter(!is.na(diff))
+  
+  # QQ Plot
+  qq_plot <- ggplot2::ggplot(diff_df, ggplot2::aes(sample = diff)) +
     ggplot2::stat_qq_line(linetype = "dashed", color = "black", linewidth = 1) +
-    ggplot2::stat_qq(color = "#6A6C6E") +
+    ggplot2::stat_qq(color = "#666666") +
     ggplot2::theme_bw() +
-    ggplot2::labs(title = paste("QQ Plot of Paired Differences:", var1, "-", var2),
-                  x = "Theoretical Quantiles", y = "Sample Quantiles")
+    ggplot2::labs(
+      title = paste("QQ Plot of Paired Differences:", var1_name, "-", var2_name),
+      x = "Theoretical Quantiles",
+      y = "Sample Quantiles"
+    )
+  
+  # Histogram
+  hist_plot <- ggplot2::ggplot(diff_df, ggplot2::aes(x = diff)) +
+    ggplot2::geom_histogram(color = "black", fill = "#666666", bins = 30) +
+    ggplot2::theme_bw() +
+    ggplot2::labs(
+      title = paste("Histogram of Paired Differences:", var1_name, "-", var2_name),
+      x = "Difference",
+      y = "Count"
+    )
+  
+  # Arrange and return both plots
+  ggpubr::ggarrange(qq_plot, hist_plot, ncol = 2)
 }
+
+
+
+plot_residuals <- function(data, continuous, grouping) {
+  grouping_q <- enquo(grouping)
+  outcome_q  <- enquo(continuous)
+  
+  data_resid <- data %>%
+    group_by(!!grouping_q) %>%
+    mutate(residual = !!outcome_q - mean(!!outcome_q, na.rm = TRUE))
+  
+  ggplot(data_resid, aes(x = !!grouping_q, y = residual, color = !!grouping_q)) +
+    geom_jitter(width = 0.2, alpha = 0.7) +
+    geom_hline(yintercept = 0, linetype = "dashed") +
+    labs(title = "Group Residuals",
+         y = "Residual",
+         x = "Groups") +
+    theme_minimal() +
+    theme(legend.position = "none")
+}
+
+
+
+
+
+variances_HT <- function(data, continuous, grouping, alpha = 0.05) {
+
+  # Capture column names
+  grouping_q <- enquo(grouping)
+  outcome_q  <- enquo(continuous)
+  
+  # Subset and drop missing
+  df <- data %>%
+    dplyr::select(!!grouping_q, !!outcome_q) %>%
+    drop_na() %>%
+    mutate(!!grouping_q := as.factor(!!grouping_q))
+  
+  # Convert to names for formula
+  grp_name <- quo_name(grouping_q)
+  out_name <- quo_name(outcome_q)
+  
+  # Build formula correctly (using as.name)
+  fml <- reformulate(termlabels = grp_name, response = out_name)
+  
+  # Run Brown-Forsythe-Levene's Test (median-centered)
+  levene_result <- car::leveneTest(fml, data = df, center = median)
+  
+  # Extract F statistic, df, and p-value
+  f_stat <- levene_result[1, "F value"]
+  df1 <- levene_result[1, "Df"]
+  df2 <- levene_result[2, "Df"]
+  p_val <- levene_result[1, "Pr(>F)"]
+  
+  p_text <- if (p_val < 0.001) "p < 0.001" else glue("p = {formatC(p_val, format = 'f', digits = 3)}")
+  
+  # Get unique groups as a character vector
+  groups <- df %>%
+    pull(!!grouping_q) %>%
+    unique()
+  
+  # Build sigma text for each group number
+  sigma_terms <- paste0("σ²_", groups)
+  
+  # Collapse with equal signs
+  null_text <- paste(sigma_terms, collapse = " = ")
+  
+  # Print results
+  cat(glue("Brown-Forsythe-Levene test for equality of variances:\n\n"))
+  cat(glue("Null: {null_text} \n\n"))
+  cat(glue("Alternative: At least one variance is different \n\n"))
+  cat(glue("Test statistic: F({df1},{df2}) = {round(f_stat, 3)} \n\n"))
+  cat(glue("p-value: {p_text}\n\n"))
+  
+  # Use your existing conclusion function
+  conclusion(p_val, alpha)
+}
+
