@@ -934,8 +934,6 @@ dependent_qq <- function(data, col1, col2) {
   ggpubr::ggarrange(qq_plot, hist_plot, ncol = 2)
 }
 
-
-<<<<<<< HEAD
 #' plot_residuals
 #'
 #' Constructs a scatterplot of residuals by groups for use in determining equality of variance.
@@ -1034,18 +1032,10 @@ variances_HT <- function(data, continuous, grouping, alpha = 0.05) {
 #' @param data Data frame or tibble.
 #' @param grouping Unquoted column name for grouping variable (factor).
 #' @param continuous Unquoted column name for continuous outcome.
-=======
-#' Paired median difference hypothesis test
-#'
-#' @param data Data frame or tibble.
-#' @param col1 Unquoted column name for first paired measurement.
-#' @param col2 Unquoted column name for second paired measurement.
->>>>>>> e65cfc7 (add Wilcoxon rank sum)
 #' @param alternative Character string specifying alternative hypothesis; "two.sided", "less", or "greater" (default "two.sided").
 #' @param m Numeric hypothesized median difference (default 0).
 #' @param alpha Numeric significance level (default 0.05).
 #' @return None. Prints formatted test results and conclusion.
-<<<<<<< HEAD
 #' @import glue
 #' @export
 independent_median_HT <- function(data,
@@ -1117,7 +1107,16 @@ independent_median_HT <- function(data,
   
   conclusion(p_val, alpha)
 }
-=======
+
+#' Paired median difference hypothesis test
+#'
+#' @param data Data frame or tibble.
+#' @param col1 Unquoted column name for first paired measurement.
+#' @param col2 Unquoted column name for second paired measurement.
+#' @param alternative Character string specifying alternative hypothesis; "two.sided", "less", or "greater" (default "two.sided").
+#' @param m Numeric hypothesized median difference (default 0).
+#' @param alpha Numeric significance level (default 0.05).
+#' @return None. Prints formatted test results and conclusion.
 #' @importFrom dplyr pull
 #' @export
 dependent_median_HT <- function(data,
@@ -1152,7 +1151,7 @@ dependent_median_HT <- function(data,
   est_med <- round(w_test$estimate, 4)
   
   # Null and alternative hypotheses
-  null_text <- glue::glue("H₀: M_d = {mu}")
+  null_text <- glue::glue("H₀: M_d = {m}")
   alt_text  <- switch(
     alternative,
     two = glue::glue("H₁: M_d ≠ {m}"),
@@ -1174,4 +1173,3 @@ dependent_median_HT <- function(data,
   
   conclusion(p_val, alpha)
 }
->>>>>>> e65cfc7 (add Wilcoxon rank sum)
