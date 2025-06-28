@@ -935,6 +935,7 @@ dependent_qq <- function(data, col1, col2) {
 }
 
 
+<<<<<<< HEAD
 #' plot_residuals
 #'
 #' Constructs a scatterplot of residuals by groups for use in determining equality of variance.
@@ -1033,10 +1034,18 @@ variances_HT <- function(data, continuous, grouping, alpha = 0.05) {
 #' @param data Data frame or tibble.
 #' @param grouping Unquoted column name for grouping variable (factor).
 #' @param continuous Unquoted column name for continuous outcome.
+=======
+#' Paired median difference hypothesis test
+#'
+#' @param data Data frame or tibble.
+#' @param col1 Unquoted column name for first paired measurement.
+#' @param col2 Unquoted column name for second paired measurement.
+>>>>>>> e65cfc7 (add Wilcoxon rank sum)
 #' @param alternative Character string specifying alternative hypothesis; "two.sided", "less", or "greater" (default "two.sided").
 #' @param m Numeric hypothesized median difference (default 0).
 #' @param alpha Numeric significance level (default 0.05).
 #' @return None. Prints formatted test results and conclusion.
+<<<<<<< HEAD
 #' @import glue
 #' @export
 independent_median_HT <- function(data,
@@ -1108,3 +1117,61 @@ independent_median_HT <- function(data,
   
   conclusion(p_val, alpha)
 }
+=======
+#' @importFrom dplyr pull
+#' @export
+dependent_median_HT <- function(data,
+                                col1,
+                                col2,
+                                alternative = "two.sided",
+                                m = 0,
+                                alpha = 0.05) {
+  # Pull paired data
+  x <- data %>% dplyr::pull({{ col1 }})
+  y <- data %>% dplyr::pull({{ col2 }})
+  
+  # Keep only complete cases
+  complete <- complete.cases(x, y)
+  x <- x[complete]
+  y <- y[complete]
+  
+  # Run Wilcoxon signed-rank test
+  w_test <- wilcox.test(
+    x, y,
+    paired = TRUE,
+    alternative = alternative,
+    mu = m,
+    conf.int = TRUE,
+    conf.level = 1 - alpha,
+    exact = FALSE
+  )
+  
+  # Extract relevant results
+  w_stat  <- round(w_test$statistic, 3)
+  p_val   <- w_test$p.value
+  est_med <- round(w_test$estimate, 4)
+  
+  # Null and alternative hypotheses
+  null_text <- glue::glue("H₀: M_d = {mu}")
+  alt_text  <- switch(
+    alternative,
+    two = glue::glue("H₁: M_d ≠ {m}"),
+    two.sided = glue::glue("H₁: M_d ≠ {m}"),
+    less      = glue::glue("H₁: M_d < {m}"),
+    greater   = glue::glue("H₁: M_d > {m}"),
+    stop("`alternative` must be one of \"two\", \"two.sided\", \"less\", \"greater\"")
+  )
+  
+  # p-value text formatting
+  p_text <- if (p_val < 0.001) "p < 0.001" else glue::glue("p = {formatC(round(p_val, 3), format = 'f', digits = 3)}")
+  
+  # Print results
+  cat(glue::glue("Wilcoxon Signed-Rank Test for the median of differences:\n\n"))
+  cat(glue::glue("Null: {null_text}\n\n"))
+  cat(glue::glue("Alternative: {alt_text}\n\n"))
+  cat(glue::glue("Test statistic: T = {w_stat}\n\n"))
+  cat(glue::glue("p-value: {p_text}\n\n"))
+  
+  conclusion(p_val, alpha)
+}
+>>>>>>> e65cfc7 (add Wilcoxon rank sum)
