@@ -322,12 +322,12 @@ one_prop_HT <- function(data, grouping, success, p = 0.5, alternative = "two.sid
 #' Independent samples mean confidence interval (equal variance assumed)
 #'
 #' @param data Data frame or tibble.
-#' @param grouping Unquoted column name for grouping variable (factor).
 #' @param continuous Unquoted column name for continuous outcome.
+#' @param grouping Unquoted column name for grouping variable (factor).
 #' @param confidence Confidence level for interval (default 0.95).
 #' @return None. Prints the confidence interval and point estimate.
 #' @export
-independent_mean_CI <- function(data, grouping, continuous, confidence = 0.95, variance = "equal") {
+independent_mean_CI <- function(data, continuous, grouping, confidence = 0.95, variance = "equal") {
   grouping_q  <- rlang::enquo(grouping)
   continuous_q <- rlang::enquo(continuous)
   
@@ -359,8 +359,8 @@ independent_mean_CI <- function(data, grouping, continuous, confidence = 0.95, v
 #' Independent samples t-test for mean difference
 #'
 #' @param data Data frame or tibble.
-#' @param grouping Unquoted column name for grouping variable (factor).
 #' @param continuous Unquoted column name for continuous outcome.
+#' @param grouping Unquoted column name for grouping variable (factor).
 #' @param alternative Character string specifying alternative hypothesis; "two.sided", "less", or "greater" (default "two.sided").
 #' @param mu Numeric hypothesized mean difference (default 0).
 #' @param alpha Numeric significance level (default 0.05).
@@ -368,9 +368,9 @@ independent_mean_CI <- function(data, grouping, continuous, confidence = 0.95, v
 #' @return None. Prints formatted test results and conclusion.
 #' @export
 independent_mean_HT <- function(data,
-                                grouping,
                                 continuous,
-                                alternative = "two.sided",
+                                grouping,
+                                alternative = "two",
                                 mu = 0,
                                 alpha = 0.05,
                                 variance = "equal") {
@@ -412,10 +412,11 @@ independent_mean_HT <- function(data,
   null_text <- glue::glue("H₀: μ₁ − μ₂ = {mu}")
   alt_text  <- switch(
     alternative,
+    two = glue::glue("H₁: μ₁ − μ₂ ≠ {mu}"),
     two.sided = glue::glue("H₁: μ₁ − μ₂ ≠ {mu}"),
     less      = glue::glue("H₁: μ₁ − μ₂ < {mu}"),
     greater   = glue::glue("H₁: μ₁ − μ₂ > {mu}"),
-    stop("`alternative` must be one of \"two.sided\", \"less\", \"greater\"")
+    stop("`alternative` must be one of \"two\", \"two.sided\", \"less\", \"greater\"")
   )
 
   test_type <- if (variance == "equal") {
@@ -557,10 +558,11 @@ dependent_mean_HT <- function(data,
   null_text <- glue::glue("H₀: μ_d = {mu}")
   alt_text  <- switch(
     alternative,
+    two = glue::glue("H₁: μ_d ≠ {mu}"),
     two.sided = glue::glue("H₁: μ_d ≠ {mu}"),
     less      = glue::glue("H₁: μ_d < {mu}"),
     greater   = glue::glue("H₁: μ_d > {mu}"),
-    stop("`alternative` must be one of \"two.sided\", \"less\", \"greater\"")
+    stop("`alternative` must be one of \"two\", \"two.sided\", \"less\", \"greater\"")
   )
 
   p_text <- if (p_val < 0.001) "p < 0.001" else glue::glue("p = {formatC(round(p_val, 3), format = 'f', digits = 3)}")
@@ -966,7 +968,7 @@ plot_residuals <- function(data, continuous, grouping) {
 
 #' variances_HT
 #'
-#' Constructs QQ plots for two independent samples based on a grouping variable.
+#' Examines the difference between two variances.
 #'
 #' @param data Data frame or tibble.
 #' @param grouping Unquoted column name for grouping variable (factor).
@@ -1039,8 +1041,8 @@ variances_HT <- function(data, continuous, grouping, alpha = 0.05) {
 #' @import glue
 #' @export
 independent_median_HT <- function(data,
+                                  continuous, 
                                   grouping,
-                                  continuous,
                                   alternative = "two",
                                   m = 0,
                                   alpha = 0.05) {
@@ -1113,7 +1115,7 @@ independent_median_HT <- function(data,
 #' @param data Data frame or tibble.
 #' @param col1 Unquoted column name for first paired measurement.
 #' @param col2 Unquoted column name for second paired measurement.
-#' @param alternative Character string specifying alternative hypothesis; "two.sided", "less", or "greater" (default "two.sided").
+#' @param alternative Character string specifying alternative hypothesis; "two", "two.sided", "less", or "greater" (default "two.sided").
 #' @param m Numeric hypothesized median difference (default 0).
 #' @param alpha Numeric significance level (default 0.05).
 #' @return None. Prints formatted test results and conclusion.
@@ -1122,7 +1124,7 @@ independent_median_HT <- function(data,
 dependent_median_HT <- function(data,
                                 col1,
                                 col2,
-                                alternative = "two.sided",
+                                alternative = "two",
                                 m = 0,
                                 alpha = 0.05) {
   # Pull paired data

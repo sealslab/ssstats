@@ -6,8 +6,8 @@
 \usage{
 independent_mean_CI(
   data,
-  grouping,
   continuous,
+  grouping,
   confidence = 0.95,
   variance = "equal"
 )
@@ -15,9 +15,9 @@ independent_mean_CI(
 \arguments{
 \item{data}{Data frame or tibble.}
 
-\item{grouping}{Unquoted column name for grouping variable (factor).}
-
 \item{continuous}{Unquoted column name for continuous outcome.}
+
+\item{grouping}{Unquoted column name for grouping variable (factor).}
 
 \item{confidence}{Confidence level for interval (default 0.95).}
 }

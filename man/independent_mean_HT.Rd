@@ -6,9 +6,9 @@
 \usage{
 independent_mean_HT(
   data,
-  grouping,
   continuous,
-  alternative = "two.sided",
+  grouping,
+  alternative = "two",
   mu = 0,
   alpha = 0.05,
   variance = "equal"
@@ -17,9 +17,9 @@ independent_mean_HT(
 \arguments{
 \item{data}{Data frame or tibble.}
 
-\item{grouping}{Unquoted column name for grouping variable (factor).}
-
 \item{continuous}{Unquoted column name for continuous outcome.}
+
+\item{grouping}{Unquoted column name for grouping variable (factor).}
 
 \item{alternative}{Character string specifying alternative hypothesis; "two.sided", "less", or "greater" (default "two.sided").}
 

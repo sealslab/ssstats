@@ -4,14 +4,7 @@
 \alias{dependent_median_HT}
 \title{Paired median difference hypothesis test}
 \usage{
-dependent_median_HT(
-  data,
-  col1,
-  col2,
-  alternative = "two.sided",
-  m = 0,
-  alpha = 0.05
-)
+dependent_median_HT(data, col1, col2, alternative = "two", m = 0, alpha = 0.05)
 }
 \arguments{
 \item{data}{Data frame or tibble.}
@@ -20,7 +13,7 @@ dependent_median_HT(
 
 \item{col2}{Unquoted column name for second paired measurement.}
 
-\item{alternative}{Character string specifying alternative hypothesis; "two.sided", "less", or "greater" (default "two.sided").}
+\item{alternative}{Character string specifying alternative hypothesis; "two", "two.sided", "less", or "greater" (default "two.sided").}
 
 \item{m}{Numeric hypothesized median difference (default 0).}
 
