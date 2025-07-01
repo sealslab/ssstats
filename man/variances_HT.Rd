@@ -19,5 +19,5 @@ variances_HT(data, continuous, grouping, alpha = 0.05)
 None. Prints formatted test results and conclusion.
 }
 \description{
-Constructs QQ plots for two independent samples based on a grouping variable.
+Examines the difference between two variances.
 }

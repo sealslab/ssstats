@@ -409,7 +409,13 @@ independent_mean_HT <- function(data,
     glue::glue("p = {formatC(round(p_val, 3), format = 'f', digits = 3)}")
   }
 
-  null_text <- glue::glue("H₀: μ₁ − μ₂ = {mu}")
+  null_text <- switch(
+    alternative,
+    two = glue::glue("H₀: μ₁ − μ₂ = {mu}"),
+    two.sided = glue::glue("H₀: μ₁ − μ₂ = {mu}"),
+    less = glue::glue("H₀: μ₁ − μ₂ ≥ {mu}"),
+    greater = glue::glue("H₀: μ₁ − μ₂ ≤ {mu}")
+  )
   alt_text  <- switch(
     alternative,
     two = glue::glue("H₁: μ₁ − μ₂ ≠ {mu}"),
@@ -555,7 +561,13 @@ dependent_mean_HT <- function(data,
   p_val   <- ttest$p.value
   mean_d  <- round(mean(x - y), 4)
 
-  null_text <- glue::glue("H₀: μ_d = {mu}")
+  null_text <- switch(
+    alternative,
+    two = glue::glue("H₀: μ_d = {mu}"),
+    two.sided = glue::glue("H₀: μ_d = {mu}"),
+    less = glue::glue("H₀: μ_d ≥ {mu}"),
+    greater = glue::glue("H₀: μ_d ≤ {mu}")
+  )
   alt_text  <- switch(
     alternative,
     two = glue::glue("H₁: μ_d ≠ {mu}"),
@@ -1101,7 +1113,7 @@ independent_median_HT <- function(data,
     stop("`alternative` must be one of \"two\", \"less\", \"greater\"")
   )
   
-  cat(glue("Wilcoxon Rank Sum Test:\n\n"))
+  cat(glue("Wilcoxon Rank Sum Test for two independent medians\n\n"))
   cat(glue("Null: {null_text}\n\n"))
   cat(glue("Alternative: {alt_text}\n\n"))
   cat(glue("Test statistic: T = {w_stat}\n\n"))
