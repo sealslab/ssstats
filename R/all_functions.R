@@ -1241,9 +1241,74 @@ one_way_ANOVA <- function(data,
   cat(glue::glue("Test Statistic: F({df1}, {df2}) = {f_stat}\n\n"))
   cat(glue::glue("p-value: {p_text}\n\n"))
   conclusion(p_val, alpha)
-  
-  # Return model invisibly in case they want to do post hoc
-  invisible(m)
 }
 
-
+#' One-way ANOVA table
+#'
+#' @param data Data frame or tibble.
+#' @param grouping Unquoted column name for grouping variable (factor).
+#' @param continuous Unquoted column name for continuous outcome.
+#' @export
+ANOVA_table <- function(data, 
+                        continuous, 
+                        grouping) {
+  
+  # Capture column names using tidy evaluation
+  outcome_q <- rlang::enquo(continuous)
+  group_q   <- rlang::enquo(grouping)
+  
+  # Prepare formula for aov()
+  outcome_chr <- rlang::as_name(outcome_q)
+  group_chr   <- rlang::as_name(group_q)
+  formula <- as.formula(paste0(outcome_chr, " ~ ", group_chr))
+  
+  # Clean dataset
+  df <- data %>%
+    dplyr::select(!!group_q, !!outcome_q) %>%
+    dplyr::filter(!is.na(!!group_q), !is.na(!!outcome_q)) %>%
+    dplyr::mutate(!!group_q := as.factor(!!group_q))
+  
+  # Run one-way ANOVA
+  m <- aov(formula, data = df)
+  anova_tbl <- broom::tidy(m)
+  
+  # Compute SS_Tot and df_Tot
+  SSTot <- sum(anova_tbl$sumsq)
+  dfTot <- sum(anova_tbl$df)
+  
+  # Extract rows
+  SS_Trt <- anova_tbl$sumsq[1]
+  df_Trt <- anova_tbl$df[1]
+  MS_Trt <- SS_Trt / df_Trt
+  F_val  <- anova_tbl$statistic[1]
+  
+  SS_E <- anova_tbl$sumsq[2]
+  df_E <- anova_tbl$df[2]
+  MS_E <- SS_E / df_E
+  
+  # Build display table
+  result <- tibble::tibble(
+    Source = c("Treatment", "Error", "Total"),
+    `Sum of Squares` = c(SS_Trt, SS_E, SSTot),
+    df = c(df_Trt, df_E, dfTot),
+    `Mean Squares` = c(MS_Trt, MS_E, NA),
+    F = c(F_val, NA, NA)
+  )
+  
+  # Display with gt and formatting
+  gt::gt(result) %>%
+    gt::fmt_integer(columns = "df") %>%
+    gt::fmt_number(columns = c("Sum of Squares", "Mean Squares", "F"), decimals = 2) %>%
+    gt::fmt_missing(columns = everything(), missing_text = "") %>%
+    gt::tab_header(title = "One-Way ANOVA Table") %>%
+    gt::cols_label(
+      Source = gt::md("**Source**"),
+      `Sum of Squares` = gt::md("**Sum of Squares**"),
+      df = gt::md("**_df_**"),
+      `Mean Squares` = gt::md("**Mean Squares**"),
+      F = gt::md("**_F_**")
+    ) %>%
+    gt::opt_align_table_header(align = "center") %>%
+    gt::cols_align(align = "left", columns = "Source") %>%
+    gt::cols_align(align = "right", columns = c("Sum of Squares", "Mean Squares", "F"))
+}
