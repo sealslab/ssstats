@@ -1187,3 +1187,63 @@ dependent_median_HT <- function(data,
   
   conclusion(p_val, alpha)
 }
+
+
+
+
+
+#' One-way ANOVA hypothesis test
+#'
+#' @param data Data frame or tibble.
+#' @param grouping Unquoted column name for grouping variable (factor).
+#' @param continuous Unquoted column name for continuous outcome.
+#' @param alpha Numeric significance level (default 0.05).
+#' @export
+one_way_ANOVA <- function(data, 
+                          continuous, 
+                          grouping,
+                          alpha = 0.05) {
+  # Capture column names using tidy evaluation
+  outcome_q <- rlang::enquo(continuous)
+  group_q   <- rlang::enquo(grouping)
+  
+  # Prepare formula for aov()
+  outcome_chr <- rlang::as_name(outcome_q)
+  group_chr   <- rlang::as_name(group_q)
+  formula <- as.formula(paste0(outcome_chr, " ~ ", group_chr))
+  
+  # Clean dataset
+  df <- data %>%
+    dplyr::select(!!group_q, !!outcome_q) %>%
+    dplyr::filter(!is.na(!!group_q), !is.na(!!outcome_q)) %>%
+    dplyr::mutate(!!group_q := as.factor(!!group_q))
+  
+  # Run one-way ANOVA
+  m <- aov(formula, data = df)
+  anova_tbl <- broom::tidy(m)
+  
+  # Extract F and p-value
+  f_stat <- round(anova_tbl$statistic[1], 3)
+  df1 <- anova_tbl$df[1]
+  df2 <- anova_tbl$df[2]
+  p_val <- signif(anova_tbl$p.value[1], 4)
+  
+  # Extract group names
+  group_levels <- levels(df[[rlang::as_name(group_q)]])
+  mu_expr <- paste0("μ_", group_levels, collapse = " = ")
+  
+  p_text <- if (p_val < 0.001) "p < 0.001" else glue::glue("p = {formatC(round(p_val, 3), format = 'f', digits = 3)}")
+  
+  # Output
+  cat("One-Way ANOVA: \n")
+  cat(glue::glue("H₀: {mu_expr}\n\n"))
+  cat(glue::glue("H₁: At least one group mean is different\n\n"))
+  cat(glue::glue("Test Statistic: F({df1}, {df2}) = {f_stat}\n\n"))
+  cat(glue::glue("p-value: {p_text}\n\n"))
+  conclusion(p_val, alpha)
+  
+  # Return model invisibly in case they want to do post hoc
+  invisible(m)
+}
+
+
