@@ -1578,5 +1578,6 @@ posthoc_dunn <- function(data,
     dplyr::select(Comparison, Z, p)
   
   # Output
+  print(tbl)
   invisible(tbl)
 }
