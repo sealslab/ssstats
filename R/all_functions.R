@@ -1249,9 +1249,9 @@ one_way_ANOVA <- function(data,
 #' @param grouping Unquoted column name for grouping variable (factor).
 #' @param continuous Unquoted column name for continuous outcome.
 #' @export
-ANOVA_table <- function(data, 
-                        continuous, 
-                        grouping) {
+one_way_ANOVA_table <- function(data, 
+                                continuous, 
+                                grouping) {
   
   # Capture column names using tidy evaluation
   outcome_q <- rlang::enquo(continuous)
@@ -1311,4 +1311,272 @@ ANOVA_table <- function(data,
     gt::opt_align_table_header(align = "center") %>%
     gt::cols_align(align = "left", columns = "Source") %>%
     gt::cols_align(align = "right", columns = c("Sum of Squares", "Mean Squares", "F"))
+}
+
+#' Tukey's test - one-way ANOVA
+#'
+#' @param data Data frame or tibble.
+#' @param grouping Unquoted column name for grouping variable (factor).
+#' @param continuous Unquoted column name for continuous outcome.
+#' @export
+posthoc_tukey <- function(data, 
+                          continuous,
+                          grouping) {
+  
+  # Capture column names using tidy evaluation
+  outcome_q <- rlang::enquo(continuous)
+  group_q   <- rlang::enquo(grouping)
+  
+  # Prepare formula for aov()
+  outcome_chr <- rlang::as_name(outcome_q)
+  group_chr   <- rlang::as_name(group_q)
+  formula <- as.formula(paste0(outcome_chr, " ~ ", group_chr))
+  
+  # Clean dataset
+  df <- data %>%
+    dplyr::select(!!group_q, !!outcome_q) %>%
+    dplyr::filter(!is.na(!!group_q), !is.na(!!outcome_q)) %>%
+    dplyr::mutate(!!group_q := as.factor(!!group_q))
+  
+  # Run one-way ANOVA
+  m <- aov(formula, data = df)
+  
+  # Run Tukey HSD
+  tukey_result <- TukeyHSD(m)
+  
+  # Convert Tukey result to a tidy data frame and format p-values
+  tukey_tbl <- tukey_result[[group_chr]] %>%
+    as.data.frame() %>%
+    tibble::rownames_to_column("comparison") %>%
+    dplyr::transmute(
+      comparison,
+      `Mean Diff.` = round(diff, 2),
+      `p-value` = dplyr::case_when(
+        `p adj` < 0.001 ~ "< 0.001",
+        TRUE ~ formatC(`p adj`, digits = 3, format = "f")
+      )
+    )
+  
+  return(tukey_tbl)
+}
+
+#' Fisher's test - one-way ANOVA
+#'
+#' @param data Data frame or tibble.
+#' @param grouping Unquoted column name for grouping variable (factor).
+#' @param continuous Unquoted column name for continuous outcome.
+#' @export
+posthoc_fisher <- function(data, 
+                           continuous,
+                           grouping) {
+  
+  # Capture column names
+  outcome_q <- rlang::enquo(continuous)
+  group_q   <- rlang::enquo(grouping)
+  
+  # Extract column names as strings
+  outcome_chr <- rlang::as_name(outcome_q)
+  group_chr   <- rlang::as_name(group_q)
+  
+  # Clean and prep dataset
+  df <- data %>%
+    dplyr::select(!!group_q, !!outcome_q) %>%
+    dplyr::filter(!is.na(!!group_q), !is.na(!!outcome_q)) %>%
+    dplyr::mutate(!!group_q := as.factor(!!group_q))
+  
+  # All pairwise combinations
+  combos <- combn(levels(df[[group_chr]]), 2, simplify = FALSE)
+  
+  # Run pairwise t-tests (unadjusted)
+  results <- purrr::map_dfr(combos, function(pair) {
+    g1 <- pair[1]
+    g2 <- pair[2]
+    
+    x1 <- df %>% dplyr::filter(!!group_q == g1) %>% dplyr::pull(!!outcome_q)
+    x2 <- df %>% dplyr::filter(!!group_q == g2) %>% dplyr::pull(!!outcome_q)
+    
+    ttest <- t.test(x1, x2, var.equal = TRUE)
+    
+    tibble::tibble(
+      comparison = paste(g1, "-", g2),
+      `Mean Diff.` = round(mean(x1) - mean(x2), 2),
+      `p-value` = dplyr::case_when(
+        ttest$p.value < 0.001 ~ "< 0.001",
+        TRUE ~ formatC(ttest$p.value, digits = 3, format = "f")
+      )
+    )
+  })
+  
+  return(results)
+}
+
+#' One-way ANOVA Assumptions
+#'
+#' @param data Data frame or tibble.
+#' @param grouping Unquoted column name for grouping variable (factor).
+#' @param continuous Unquoted column name for continuous outcome.
+#' @export
+ANOVA_assumptions <- function(data, 
+                              continuous, 
+                              grouping) {
+  library(tidyverse)
+  
+  # Capture tidy eval column names
+  outcome_q <- rlang::enquo(continuous)
+  group_q   <- rlang::enquo(grouping)
+  
+  outcome_chr <- rlang::as_name(outcome_q)
+  group_chr   <- rlang::as_name(group_q)
+  
+  # Clean data
+  df <- data %>%
+    dplyr::select(!!group_q, !!outcome_q) %>%
+    dplyr::filter(!is.na(!!group_q), !is.na(!!outcome_q)) %>%
+    dplyr::mutate(!!group_q := as.factor(!!group_q))
+  
+  # Run one-way ANOVA
+  formula <- as.formula(paste0(outcome_chr, " ~ ", group_chr))
+  model <- aov(formula, data = df)
+  
+  # Extract residuals, fitted values, group
+  model_df <- df %>%
+    mutate(
+      fitted = fitted(model),
+      residuals = residuals(model)
+    )
+  
+  # 1. QQ plot of residuals by group
+  qq_plot <- model_df %>%
+    ggplot(aes(sample = residuals)) +
+    stat_qq() +
+    stat_qq_line() +
+    facet_wrap(vars(!!group_q)) +
+    theme_bw() +
+    labs(title = "QQ Plots of Residuals by Group",
+         y = "Sample Quantiles",
+         x = "Theoretical Quantiles")
+  
+  # 2. Residuals vs Fitted Plot
+  rvf_plot <- model_df %>%
+    ggplot(aes(x = fitted, y = residuals)) +
+    geom_point() +
+    geom_hline(yintercept = 0, linetype = "dashed") +
+    theme_bw() +
+    labs(title = "Residuals vs Fitted Values",
+         x = "Fitted Values",
+         y = "Residuals")
+  
+  # # 3. Boxplot of outcome by group
+  # box_plot <- df %>%
+  #   ggplot(aes(x = !!group_q, y = !!outcome_q)) +
+  #   geom_boxplot() +
+  #   theme_bw() +
+  #   labs(title = "Boxplot of Outcome by Group",
+  #        x = group_chr,
+  #        y = outcome_chr)
+  
+  # Combine with patchwork
+  suppressPackageStartupMessages(library(patchwork))
+  
+  combined_plot <- (qq_plot / rvf_plot) +
+    plot_annotation(title = "ANOVA Assumptions")
+  
+  return(combined_plot)
+}
+
+#' Kruskal–Wallis Hypothesis Test
+#'
+#' @param data       A data frame
+#' @param continuous Numeric/continuous response variable.
+#' @param grouping   Factor or grouping variable (≥ 2 levels).
+#' @param alpha      Significance level for conclusion helper.
+#' @export
+kruskal_HT <- function(data,
+                       continuous,
+                       grouping,
+                       alpha = 0.05) {
+  
+  ## capture column quosures & names
+  outcome_q <- rlang::enquo(continuous)
+  group_q   <- rlang::enquo(grouping)
+  
+  outcome_chr <- rlang::as_name(outcome_q)
+  group_chr   <- rlang::as_name(group_q)
+  
+  ## clean data
+  df <- data %>%
+    dplyr::select(!!group_q, !!outcome_q) %>%
+    dplyr::filter(!is.na(!!group_q), !is.na(!!outcome_q)) %>%
+    dplyr::mutate(!!group_q := as.factor(!!group_q))
+  
+  ## KW
+  kw <- stats::kruskal.test(
+    formula = stats::as.formula(paste0(outcome_chr, " ~ ", group_chr)),
+    data    = df
+  )
+  
+  ## extract 
+  H_stat <- round(kw$statistic, 3)
+  df_kw  <- kw$parameter         
+  p_val  <- signif(kw$p.value, 4)
+  
+  # build H0 expression with group names
+  group_levels <- levels(df[[group_chr]])
+  mu_expr <- paste0("M_", group_levels, collapse = " = ")  
+  
+  ## output
+  cat("Kruskal–Wallis Rank-Sum Test\n\n")
+  cat(glue::glue("H₀: {mu_expr}\n\n"))
+  cat("H₁: At least one group is different\n\n")
+  cat(glue::glue("Test Statistic: X({df_kw}) = {H_stat},\n"))
+  cat(if (p_val < 0.001) " p < 0.001\n" else glue::glue(" p = {formatC(round(p_val,3), format='f', digits=3)}\n"))
+  
+  # optional conclusion() helper if you have one defined
+  if (exists("conclusion") && is.function(conclusion)) {
+    conclusion(p_val, alpha)
+  }
+  
+  invisible(kw)
+}
+
+
+
+#' Dunn's posthoc test (nonparametric)
+#'
+#' @param data       A data frame
+#' @param continuous Numeric/continuous response variable.
+#' @param grouping   Factor or grouping variable (≥ 2 levels).
+#' @export
+posthoc_dunn <- function(data,
+                         continuous,
+                         grouping,
+                         adjust = TRUE) {
+  # Capture variable names
+  outcome_q <- rlang::enquo(continuous)
+  group_q   <- rlang::enquo(grouping)
+  
+  outcome_chr <- rlang::as_name(outcome_q)
+  group_chr   <- rlang::as_name(group_q)
+  
+  # data prep
+  df <- data %>%
+    dplyr::select(!!group_q, !!outcome_q) %>%
+    dplyr::filter(!is.na(!!group_q), !is.na(!!outcome_q)) %>%
+    dplyr::mutate(!!group_q := as.factor(!!group_q),
+                  !!outcome_q := as.numeric(!!outcome_q))
+  
+  # get Dunn's test
+  dunn_result <- FSA::dunnTest(x = df[[outcome_chr]],
+                               g = df[[group_chr]],
+                               method = ifelse(adjust, "bonferroni", "none"))
+  
+  # print results
+  tbl <- dunn_result$res %>% 
+    dplyr::mutate(p = if (adjust) P.adj else P.unadj) %>%
+    dplyr::mutate(p = round(p, 3),
+                  p = formatC(p, format = "f", digits = 3)) %>%
+    dplyr::select(Comparison, Z, p)
+  
+  # Output
+  invisible(tbl)
 }
