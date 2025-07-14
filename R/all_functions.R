@@ -1106,7 +1106,7 @@ independent_median_HT <- function(data,
   
   alt_text <- switch(
     alternative,
-    two = glue("H₀: M₁ - M₂ = {m}"),
+    two = glue("H₁: M₁ - M₂ ≠ {m}"),
     two.sided = glue("H₁: M₁ - M₂ ≠ {m}"),
     less = glue("H₁: M₁ - M₂ < {m}"),
     greater = glue("H₁: M₁ - M₂ > {m}"),
@@ -1187,10 +1187,6 @@ dependent_median_HT <- function(data,
   
   conclusion(p_val, alpha)
 }
-
-
-
-
 
 #' One-way ANOVA hypothesis test
 #'
@@ -1479,7 +1475,7 @@ ANOVA_assumptions <- function(data,
   suppressPackageStartupMessages(library(patchwork))
   
   combined_plot <- (qq_plot / rvf_plot) +
-    plot_annotation(title = "ANOVA Assumptions")
+    plot_annotation(title = "One-Way ANOVA Assumptions")
   
   return(combined_plot)
 }
@@ -1528,8 +1524,8 @@ kruskal_HT <- function(data,
   cat("Kruskal–Wallis Rank-Sum Test\n\n")
   cat(glue::glue("H₀: {mu_expr}\n\n"))
   cat("H₁: At least one group is different\n\n")
-  cat(glue::glue("Test Statistic: X({df_kw}) = {H_stat},\n"))
-  cat(if (p_val < 0.001) " p < 0.001\n" else glue::glue(" p = {formatC(round(p_val,3), format='f', digits=3)}\n"))
+  cat(glue::glue("Test Statistic: X({df_kw}) = {H_stat},\n\n"))
+  cat(if (p_val < 0.001) " p < 0.001\n" else glue::glue(" p = {formatC(round(p_val,3), format='f', digits=3)}\n\n"))
   
   # optional conclusion() helper if you have one defined
   if (exists("conclusion") && is.function(conclusion)) {
@@ -1580,4 +1576,365 @@ posthoc_dunn <- function(data,
   # Output
   print(tbl)
   invisible(tbl)
+}
+
+#' Two-way ANOVA table
+#'
+#' @param data Data frame or tibble.
+#' @param continuous Unquoted column name for continuous outcome.
+#' @param A Factor A
+#' @param B Factor B
+#' @param interaction logical statement to indicate if an interaction term should be included
+#' @export
+two_way_ANOVA_table <- function(data,
+                                continuous,
+                                A,
+                                B,
+                                interaction = TRUE) {
+  
+  ## --- capture quosures -------------------------------------------------
+  y_q <- rlang::enquo(continuous)
+  A_q <- rlang::enquo(A)
+  B_q <- rlang::enquo(B)
+  
+  y_chr <- rlang::as_name(y_q)
+  A_chr <- rlang::as_name(A_q)
+  B_chr <- rlang::as_name(B_q)
+  
+  ## --- clean data -------------------------------------------------------
+  df <- data %>%
+    dplyr::select(!!y_q, !!A_q, !!B_q) %>%
+    dplyr::filter(!is.na(!!y_q), !is.na(!!A_q), !is.na(!!B_q)) %>%
+    dplyr::mutate(
+      !!A_q := as.factor(!!A_q),
+      !!B_q := as.factor(!!B_q),
+      !!y_q := as.numeric(!!y_q)
+    )
+  
+  ## --- build formula + fit model ---------------------------------------
+  rhs     <- if (interaction) paste0(A_chr, " * ", B_chr)
+  else   paste0(A_chr, " + ", B_chr)
+  formula <- stats::as.formula(paste0(y_chr, " ~ ", rhs))
+  
+  model <- stats::aov(formula, data = df)
+  
+  ## --- tidy ANOVA -------------------------------------------------------
+  tbl <- broom::tidy(model) %>%
+    dplyr::mutate(
+      Source = dplyr::case_when(
+        term == "Residuals"        ~ "Error",
+        grepl(":", term)           ~ "Interaction",
+        TRUE                       ~ term
+      )
+    ) %>%
+    dplyr::select(Source, dplyr::everything(), -term) %>%
+    dplyr::rename(
+      `Sum of Squares` = sumsq,
+      df               = df,
+      F                = statistic,
+      p                = p.value
+    ) %>%
+    dplyr::mutate(
+      `Mean Squares` = `Sum of Squares` / df
+    )
+  
+  ## --- indent model terms ----------------------------------------------
+  model_terms <- tbl %>%
+    dplyr::filter(Source %in% c(A_chr, B_chr, "Interaction")) %>%
+    dplyr::mutate(Source = paste0("•", Source))
+  
+  ## --- build Regression, Error, Total rows ------------------------------
+  regression_row <- model_terms %>%
+    dplyr::summarise(
+      Source          = "Regression",
+      df              = sum(df),
+      `Sum of Squares`= sum(`Sum of Squares`),
+      `Mean Squares`  = NA_real_,
+      F               = NA_real_,
+      p               = NA_real_,
+      .groups = "drop"
+    )
+  
+  error_row <- tbl %>% dplyr::filter(Source == "Error")
+  
+  total_row <- tbl %>%
+    dplyr::summarise(
+      Source          = "Total",
+      df              = sum(df),
+      `Sum of Squares`= sum(`Sum of Squares`),
+      `Mean Squares`  = NA_real_,
+      F               = NA_real_,
+      p               = NA_real_,
+      .groups = "drop"
+    )
+  
+  ## --- assemble final table in desired order ----------------------------
+  final_tbl <- dplyr::bind_rows(
+    regression_row,
+    model_terms,
+    error_row,
+    total_row
+  ) %>%
+    dplyr::mutate(
+      `Sum of Squares` = round(`Sum of Squares`, 2),
+      `Mean Squares`   = round(`Mean Squares`, 2),
+      F                = round(F, 2),
+      p = dplyr::case_when(
+        is.na(p)    ~ "",
+        p < 0.001   ~ "< 0.001",
+        TRUE        ~ formatC(round(p, 3), format = "f", digits = 3)
+      )
+    ) %>%
+    dplyr::select(Source, `Sum of Squares`, df, `Mean Squares`, F, p)   # order cols
+  
+  ## --- print with gt ----------------------------------------------------
+  gt::gt(final_tbl) %>%
+    gt::sub_missing(columns = everything(), missing_text = "") %>%
+    gt::tab_header(title = "Two-Way ANOVA Table") %>%
+    gt::cols_label(
+      Source          = gt::md("**Source**"),
+      `Sum of Squares`= gt::md("**Sum of Squares**"),
+      df              = gt::md("**_df_**"),
+      `Mean Squares`  = gt::md("**Mean Squares**"),
+      F               = gt::md("**_F_**"),
+      p               = gt::md("**_p_**")
+    ) %>%
+    gt::opt_align_table_header(align = "center") %>%
+    gt::cols_align("left",  columns = Source) %>%
+    gt::cols_align("right", columns = c(`Sum of Squares`, df, `Mean Squares`, F, p))
+}
+
+
+#' Two-way ANOVA hypothesis test
+#'
+#' @param data Data frame or tibble.
+#' @param continuous Unquoted column name for continuous outcome.
+#' @param A Factor A
+#' @param B Factor B
+#' @param interaction logical statement to indicate if an interaction term should be included
+#' @param alpha Numeric significance level (default 0.05).
+#' @export
+two_way_ANOVA <- function(data,
+                          continuous,
+                          A,
+                          B,
+                          interaction = TRUE,
+                          alpha = 0.05) {
+  
+  # Capture variable names
+  y_q <- rlang::enquo(continuous)
+  A_q <- rlang::enquo(A)
+  B_q <- rlang::enquo(B)
+  
+  y_chr <- rlang::as_name(y_q)
+  A_chr <- rlang::as_name(A_q)
+  B_chr <- rlang::as_name(B_q)
+  
+  # Clean data
+  df <- data %>%
+    dplyr::select(!!y_q, !!A_q, !!B_q) %>%
+    dplyr::filter(!is.na(!!y_q), !is.na(!!A_q), !is.na(!!B_q)) %>%
+    dplyr::mutate(
+      !!A_q := as.factor(!!A_q),
+      !!B_q := as.factor(!!B_q),
+      !!y_q := as.numeric(!!y_q)
+    )
+  
+  # Build formula and model
+  rhs <- if (interaction) paste0(A_chr, " * ", B_chr) else paste0(A_chr, " + ", B_chr)
+  model <- aov(stats::as.formula(paste0(y_chr, " ~ ", rhs)), data = df)
+  anov <- broom::tidy(model)
+  
+  # ----------------------------
+  # Interaction model
+  if (interaction) {
+    row_int <- anov %>% dplyr::filter(grepl(":", term))
+    df1     <- row_int$df
+    F_val   <- round(row_int$statistic, 2)
+    p_val   <- row_int$p.value
+    df2     <- anov %>% dplyr::filter(term == "Residuals") %>% dplyr::pull(df)
+    
+    p_txt <- ifelse(p_val < 0.001, "< 0.001",
+                    formatC(round(p_val, 3), format = "f", digits = 3))
+    
+    cat(glue::glue("Test for Interaction ({A_chr} × {B_chr}):\n\n\n"))
+    cat(glue::glue("H₀: The relationship between {y_chr} and {A_chr} does not depend on {B_chr}.\n\n"))
+    cat(glue::glue("H₁: The relationship between {y_chr} and {A_chr} depends on {B_chr}.\n\n"))
+    cat(glue::glue("Test Statistic: F({df1}, {df2}) = {F_val}\n\n"))
+    cat(glue::glue("p-value: p = {p_txt}\n\n"))
+    if (exists("conclusion") && is.function(conclusion)) conclusion(p_val, alpha)
+    
+    return(invisible(model))
+  }
+  
+  # ----------------------------
+  # Additive model (main effects)
+  row_A <- anov %>% dplyr::filter(term == A_chr)
+  row_B <- anov %>% dplyr::filter(term == B_chr)
+  
+  print_one <- function(row, factor_name) {
+    F_val <- round(row$statistic, 2)
+    df1   <- row$df
+    df2   <- anov %>% dplyr::filter(term == "Residuals") %>% dplyr::pull(df)
+    p_val <- row$p.value
+    p_txt <- ifelse(p_val < 0.001, "< 0.001",
+                    formatC(round(p_val, 3), format = "f", digits = 3))
+    
+    cat(glue::glue("Test Statistic: F({df1}, {df2}) = {F_val}\n\n"))
+    cat(glue::glue("p-value: p = {p_txt}\n\n"))
+    if (exists("conclusion") && is.function(conclusion)) conclusion(p_val, alpha)
+  }
+  
+  # Get group levels
+  A_levels <- levels(df[[A_chr]])
+  B_levels <- levels(df[[B_chr]])
+  mu_expr_A <- paste0("μ_", A_levels, collapse = " = ")
+  mu_expr_B <- paste0("μ_", B_levels, collapse = " = ")
+  
+  # Output
+  cat(glue::glue("Test for Main Effect {A_chr}:\n\n\n"))
+  cat(glue::glue("H₀: {mu_expr_A}\n\n"))
+  cat(glue::glue("H₁: At least one mean is different.\n\n"))
+  print_one(row_A, A_chr)
+  
+  cat(glue::glue("\n\n"))
+  
+  cat(glue::glue("Test for Main Effect {B_chr}:\n\n\n"))
+  cat(glue::glue("H₀: {mu_expr_B}\n\n"))
+  cat(glue::glue("H₁: At least one mean is different.\n\n"))
+  print_one(row_B, B_chr)
+  
+  invisible(model)
+}
+
+#' Profile plot for two-way ANOVA
+#'
+#' @param data Data frame or tibble.
+#' @param continuous Unquoted column name for continuous outcome.
+#' @param A Factor A
+#' @param B Factor B
+#' @param interaction logical statement to indicate if an interaction term should be included
+#' @param alpha Numeric significance level (default 0.05).
+#' @export
+profile_plot <- function(data,
+                         continuous,
+                         xaxis,
+                         lines) {
+  
+  # Tidy evaluation
+  y_q  <- rlang::enquo(continuous)
+  x_q  <- rlang::enquo(xaxis)
+  l_q  <- rlang::enquo(lines)
+  
+  # Compute group means
+  df_means <- data %>%
+    dplyr::filter(!is.na(!!y_q), !is.na(!!x_q), !is.na(!!l_q)) %>%
+    dplyr::group_by(!!x_q, !!l_q) %>%
+    dplyr::summarise(mean_y = mean(!!y_q, na.rm = TRUE), .groups = "drop")
+  
+  # Create plot
+  ggplot(df_means, aes(x = !!x_q,
+                       y = mean_y,
+                       group = !!l_q,
+                       color = !!l_q)) +
+    geom_line(size = 1.1) +
+    geom_point(size = 2) +
+    labs(
+      x = rlang::as_name(x_q),
+      y = glue::glue("Mean {rlang::as_name(y_q)}"),
+      color = rlang::as_name(l_q)
+    ) +
+    theme_bw() +
+    theme(
+      plot.title = element_text(size = 16, face = "bold", hjust = 0.5),
+      axis.title = element_text(size = 13),
+      legend.title = element_text(size = 12)
+    )
+}
+
+
+
+#' Two-way ANOVA Assumptions
+#'
+#' @param data        Data frame or tibble.
+#' @param continuous  Unquoted column name for the numeric outcome.
+#' @param A           Unquoted column name for factor A.
+#' @param B           Unquoted column name for factor B.
+#' @param interaction Logical. If TRUE (default) fit A * B; otherwise A + B.
+#' @export
+ANOVA2_assumptions <- function(data,
+                               continuous,
+                               A,
+                               B,
+                               interaction = TRUE) {
+  
+  library(tidyverse)
+  
+  # --- capture names -------------------------------------------------------
+  y_q <- rlang::enquo(continuous)
+  A_q <- rlang::enquo(A)
+  B_q <- rlang::enquo(B)
+  
+  y_chr <- rlang::as_name(y_q)
+  A_chr <- rlang::as_name(A_q)
+  B_chr <- rlang::as_name(B_q)
+  
+  # --- clean data ----------------------------------------------------------
+  df <- data %>%
+    dplyr::select(!!A_q, !!B_q, !!y_q) %>%
+    dplyr::filter(!is.na(!!A_q), !is.na(!!B_q), !is.na(!!y_q)) %>%
+    dplyr::mutate(
+      !!A_chr := as.factor(!!A_q),
+      !!B_chr := as.factor(!!B_q)
+    )
+  
+  # --- build & fit model ---------------------------------------------------
+  rhs <- if (interaction) {
+    paste(A_chr, "*", B_chr)
+  } else {
+    paste(A_chr, "+", B_chr)
+  }
+  form   <- stats::as.formula(paste(y_chr, "~", rhs))
+  model  <- stats::aov(form, data = df)
+  
+  # --- residual & fitted values -------------------------------------------
+  model_df <- df %>%
+    mutate(
+      fitted    = fitted(model),
+      residuals = residuals(model),
+      AB_cell   = interaction(!!sym(A_chr), !!sym(B_chr), sep = " : ")
+    )
+  
+  # --- 1. QQ plot faceted by A × B ----------------------------------------
+  qq_plot <- model_df %>%
+    ggplot(aes(sample = residuals)) +
+    stat_qq() +
+    stat_qq_line() +
+    facet_wrap(vars(AB_cell)) +
+    theme_bw() +
+    labs(title = "QQ Plots of Residuals by Treatment Group",
+         y = "Sample Quantiles",
+         x = "Theoretical Quantiles")
+  
+  # --- 2. Residuals vs Fitted plot ----------------------------------------
+  rvf_plot <- model_df %>%
+    ggplot(aes(x = fitted, y = residuals,
+               colour = !!sym(A_chr), shape = !!sym(B_chr))) +
+    geom_point(alpha = 0.7, size = 2) +
+    geom_hline(yintercept = 0, linetype = "dashed") +
+    theme_bw() +
+    labs(title = "Residuals vs Fitted Values",
+         x = "Fitted Values",
+         y = "Residuals",
+         colour = A_chr,
+         shape  = B_chr)
+  
+  # --- combine & return ----------------------------------------------------
+  suppressPackageStartupMessages(library(patchwork))
+  combined_plot <- (qq_plot / rvf_plot) +
+    patchwork::plot_annotation(
+      title = glue::glue("Two-way ANOVA Assumptions")
+    )
+  
+  return(combined_plot)
 }
