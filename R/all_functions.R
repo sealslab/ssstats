@@ -1942,3 +1942,250 @@ ANOVA2_assumptions <- function(data,
   
   return(combined_plot)
 }
+
+
+
+
+
+#' Pairwise Correlation
+#'
+#' @param data A data frame or tibble.
+#' @param x Optional unquoted column name for x variable.
+#' @param y Optional unquoted column name for y variable.
+#' @param method Correlation type: "pearson" (default) or "spearman".
+#'
+#' @return A tibble with var1, var2, correlation, test_statistic, p_value
+#' @export
+correlation <- function(data, x = NULL, y = NULL, method = "pearson") {
+  library(tidyverse)
+  
+  if (!method %in% c("pearson", "spearman")) {
+    stop("`method` must be either 'pearson' or 'spearman'.")
+  }
+  
+  # Helper function
+  extract_cor_info <- function(var1, var2, data, method) {
+    test <- cor.test(data[[var1]], data[[var2]], method = method)
+    
+    stat_name <- if (method == "pearson") "t" else "S"
+    
+    tibble(
+      var1 = var1,
+      var2 = var2,
+      correlation = round(test$estimate, 3),
+      test_statistic = round(test$statistic, 3),
+      p_value = ifelse(test$p.value < 0.001, "< 0.001",
+                       formatC(test$p.value, digits = 3, format = "f"))
+    ) %>% 
+      # Attach test_stat_name as an attribute
+      structure(test_stat_name = stat_name)
+  }
+  
+  # Case 1: x and y provided
+  if (!is.null(rlang::enexpr(x)) & !is.null(rlang::enexpr(y))) {
+    var1 <- rlang::as_name(rlang::enexpr(x))
+    var2 <- rlang::as_name(rlang::enexpr(y))
+    result <- extract_cor_info(var1, var2, data, method)
+    attr(result, "test_stat_name") <- if (method == "pearson") "t" else "S"
+    return(result)
+  }
+  
+  # Case 2: All pairwise correlations
+  numeric_data <- data %>% select(where(is.numeric))
+  var_names <- names(numeric_data)
+  
+  all_pairs <- expand_grid(var1 = var_names, var2 = var_names) %>%
+    filter(var1 < var2)
+  
+  results <- map2_dfr(all_pairs$var1, all_pairs$var2,
+                      ~extract_cor_info(.x, .y, numeric_data, method))
+  
+  attr(results, "test_stat_name") <- if (method == "pearson") "t" else "S"
+  
+  return(results)
+}
+
+
+#' Side-by-Side QQ Plots for Two Variables
+#'
+#' @description
+#' Creates side-by-side QQ plots to assess the normality of two numeric variables.
+#'
+#' @param data A data frame or tibble containing the variables.
+#' @param x Unquoted name of the first numeric variable.
+#' @param y Unquoted name of the second numeric variable.
+#'
+#' @return A ggplot object showing two QQ plots side-by-side.
+#' @export
+correlation_qq <- function(data, x, y) {
+  library(ggplot2)
+  library(rlang)
+  library(dplyr)
+  
+  # Tidy evaluation
+  x_q <- enquo(x)
+  y_q <- enquo(y)
+  
+  x_chr <- as_name(x_q)
+  y_chr <- as_name(y_q)
+  
+  # Check for numeric
+  if (!is.numeric(pull(data, !!x_q)) | !is.numeric(pull(data, !!y_q))) {
+    stop("Both x and y must be numeric variables.")
+  }
+  
+  # Reshape for facetting
+  df_long <- data %>%
+    select(x = !!x_q, y = !!y_q) %>%
+    pivot_longer(cols = everything(), names_to = "variable", values_to = "value")
+  
+  ggplot(df_long, aes(sample = value)) +
+    stat_qq() +
+    stat_qq_line(color = "steelblue") +
+    facet_wrap(~variable, scales = "free") +
+    theme_minimal(base_size = 14) +
+    labs(title = "QQ Plots for Normality",
+         x = "Theoretical Quantiles",
+         y = "Sample Quantiles")
+}
+
+
+#' Linear Regression Summary
+#'
+#' Fits a linear model and returns coefficient estimates, standard errors, test statistics,
+#' confidence intervals, and formatted p-values.
+#'
+#' @param data A data frame or tibble.
+#' @param outcome Unquoted name of the outcome (y) variable.
+#' @param function_of Model terms, e.g., x1 + x2 + x1:x2.
+#' @param confidence Confidence level for the confidence interval. Default is 0.95.
+#'
+#' @return A tibble with term, estimate, standard error, t-statistic, CI bounds, and p-value.
+#' @export
+linear_regression <- function(data, outcome, function_of, confidence = 0.95) {
+  # Capture expressions
+  outcome_expr <- rlang::enexpr(outcome)
+  rhs_expr     <- substitute(function_of)
+  
+  # Construct formula
+  fmla <- as.formula(paste0(rlang::as_name(outcome_expr), " ~ ", deparse(rhs_expr)))
+  
+  # Fit model
+  model <- lm(fmla, data = data)
+  
+  # Extract and format output
+  broom::tidy(model, conf.int = TRUE, conf.level = confidence) %>%
+    dplyr::mutate(
+      p_value = dplyr::case_when(
+        p.value < 0.001 ~ "< 0.001",
+        TRUE ~ formatC(p.value, format = "f", digits = 3)
+      )
+    ) %>%
+    dplyr::select(
+      term,
+      estimate,
+      std_error = std.error,
+      statistic,
+      lower_bound = conf.low,
+      upper_bound = conf.high,
+      p_value
+    )
+}
+
+#' Test for Significant Regression Line
+#'
+#' @param data A data frame or tibble
+#' @param outcome Unquoted outcome variable (y)
+#' @param function_of Unquoted formula RHS (e.g., x or x1 + x2)
+#' @param family A glm family (default is gaussian)
+#' @param alpha Significance level (default = 0.05)
+#'
+#' @return Printed output of LRT result
+#' @export
+significant_line <- function(data, outcome, function_of, family = gaussian(), alpha = 0.05) {
+  library(tidyverse)
+  library(glue)
+  library(rlang)
+  
+  # Capture and convert unquoted input
+  y <- enquo(outcome)
+  y_chr <- as_name(y)
+  rhs <- enquo(function_of)
+  rhs_chr <- quo_text(rhs)
+  
+  # Extract variable names used in the model
+  vars_rhs <- all.vars(parse_expr(rhs_chr))
+  vars_all <- c(y_chr, vars_rhs)
+  
+  # Clean data: select needed columns and drop rows with missing
+  df <- data %>%
+    dplyr::select(all_of(vars_all)) %>%
+    tidyr::drop_na()
+  
+  # Fit models
+  full_model <- glm(formula = as.formula(glue("{y_chr} ~ {rhs_chr}")), data = df, family = family)
+  null_model <- glm(formula = as.formula(glue("{y_chr} ~ 1")), data = df, family = family)
+  
+  # Likelihood ratio test
+  lrt <- anova(null_model, full_model, test = "LRT")
+  
+  # Check structure and contents
+  if (!("Deviance" %in% names(lrt)) || nrow(lrt) < 2) {
+    stop("LRT failed: no valid deviance results found.")
+  }
+  
+  df_diff  <- lrt$Df[2]
+  dev_diff <- lrt$Deviance[2]
+  p_val    <- lrt$`Pr(>Chi)`[2]
+  
+  # Format p-value
+  p_text <- if (is.na(p_val)) {
+    "p = NA"
+  } else if (p_val < 0.001) {
+    "p < 0.001"
+  } else {
+    glue("p = {formatC(round(p_val, 3), format = 'f', digits = 3)}")
+  }
+  
+  # ── print results ───────────────────────────────────────────────────
+  cat(glue("Likelihood Ratio Test for Significant Regression Line:\n\n"))
+  cat(glue("Null: H₀: β₁ = β₂ = ... = βₖ = 0\n\n"))
+  cat(glue("Alternative: H₁: At least one βᵢ ≠ 0\n\n"))
+  cat(glue("Test statistic: χ²({df_diff}) = {round(dev_diff, 3)}\n\n"))
+  cat(glue("p-value: {p_text}\n\n"))
+  
+  # Optional conclusion helper
+  if (exists("conclusion", mode = "function")) {
+    conclusion(p_val, alpha)
+  }
+}
+
+
+
+#' Adjusted R-squared for Multiple Regression
+#'
+#' Calculates the adjusted R-squared value for a multiple linear regression model.
+#'
+#' @param data A data frame or tibble.
+#' @param outcome Unquoted outcome variable (e.g., y).
+#' @param function_of Unquoted predictors (e.g., x1 + x2).
+#'
+#' @return A numeric value: the adjusted R-squared.
+#' @export
+r_squared <- function(data, outcome, function_of) {
+  # Capture inputs
+  y <- rlang::as_name(rlang::enquo(outcome))
+  rhs_expr <- rlang::enquo(function_of)
+  
+  # Parse the RHS expression into a character vector of variables
+  rhs_vars <- all.vars(rhs_expr)
+  
+  # Construct the formula
+  f <- reformulate(rhs_vars, response = y)
+  
+  # Fit model and extract adjusted R-squared
+  model <- lm(f, data = data)
+  round(summary(model)$adj.r.squared,4)
+}
+
+
