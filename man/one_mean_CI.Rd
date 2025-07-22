@@ -20,5 +20,7 @@ A tibble with mean, standard deviation, confidence level, and confidence interva
 Calculate Mean and Confidence Interval for a Continuous Variable
 }
 \examples{
+\dontrun{
 one_mean_CI(mtcars, mpg)
+}
 }

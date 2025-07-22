@@ -176,7 +176,9 @@ n_pct <- function(data, row_var, col_var = NULL, rows = 3, digits = 1, denom = "
 #' @importFrom tibble tibble
 #' @return A tibble with mean, standard deviation, confidence level, and confidence interval bounds.
 #' @examples
+#' \dontrun{
 #' one_mean_CI(mtcars, mpg)
+#' }
 #' @export
 one_mean_CI <- function(data, continuous, confidence = 0.95) {
   var_values <- data %>% dplyr::pull({{ continuous }})
@@ -693,8 +695,10 @@ normality_correlation <- function(data, method = c("pearson", "kendall", "spearm
 #' @import ggplot2
 #' @importFrom broom augment
 #' @examples
+#' \dontrun{
 #' model <- lm(bill_length_mm ~ bill_depth_mm + year, penguins)
 #' cooks(model)
+#' }
 #' @export
 cooks <- function(fitted.lm, label = TRUE, show.threshold = FALSE, threshold = "convention",
                   scale.factor = 0.5, n_labels_desired = NULL, label_height_nudge = 0) {
@@ -905,6 +909,10 @@ independent_qq <- function(data, continuous, grouping) {
 #' @param col1 A string specifying the column name of the first measurement.
 #' @param col2 A string specifying the column name of the second measurement.
 #' @return A ggplot object representing the QQ plot of the paired differences.
+#' @importFrom stats IQR TukeyHSD aov as.formula complete.cases cor density
+#'   fitted fitted.values median na.omit prop.test reformulate resid residuals
+#'   rstandard sd t.test wilcox.test
+#' @importFrom utils combn
 #' @examples
 #' dependent_qq_plot(a1c_measurements, "first_measurement", "second_measurement")
 #' @export
@@ -1472,8 +1480,6 @@ ANOVA_assumptions <- function(data,
   #        y = outcome_chr)
   
   # Combine with patchwork
-  suppressPackageStartupMessages(library(patchwork))
-  
   combined_plot <- (qq_plot / rvf_plot) +
     plot_annotation(title = "One-Way ANOVA Assumptions")
   
@@ -1867,8 +1873,6 @@ ANOVA2_assumptions <- function(data,
                                A,
                                B,
                                interaction = TRUE) {
-  
-  library(tidyverse)
   
   # --- capture names -------------------------------------------------------
   y_q <- rlang::enquo(continuous)

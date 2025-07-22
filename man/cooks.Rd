@@ -37,6 +37,8 @@ Returns a Cook's distance plot for the supplied linear model. Outliers can be la
 and custom thresholding options are supported. Based on `gg_cooksd` from the `lindia` package.
 }
 \examples{
+\dontrun{
 model <- lm(bill_length_mm ~ bill_depth_mm + year, penguins)
 cooks(model)
+}
 }

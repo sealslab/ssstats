@@ -16,18 +16,13 @@ Authors@R:
 Description: This package helps students get acclimated to R programming in introductory biostatistics courses by combining commonly used statistical tasks and duties into easy-to-use functions.
 License: MIT + file LICENSE
 Encoding: UTF-8
-LazyData: true
-Imports: 
-    ggpubr,
-    ggplot2,
-    tidyr,
-    dplyr,
-    magrittr,
-    rlang,
-    scales,
-    glue
-RoxygenNote: 7.3.2
-Suggests: 
-    knitr,
-    rmarkdown
+Imports: broom, car, dplyr, FSA, ggplot2, ggpubr, glue, gt, janitor,
+        MASS, magrittr, palmerpenguins, patchwork, purrr, rlang,
+        scales, tibble, tidyr
+Suggests: knitr, rmarkdown, tidyverse
 VignetteBuilder: knitr
+RoxygenNote: 7.3.2
+NeedsCompilation: no
+Packaged: 2025-07-22 03:26:10 UTC; ihsanbuker
+Author: Ihsan Buker [aut, cre], Samantha Seals [aut]
+Maintainer: Ihsan Buker <iebuker@uab.edu>
