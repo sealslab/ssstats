@@ -78,13 +78,13 @@ one_mean_CI(data = penguins_clean, continuous = bill_length_mm, confidence = 0.9
 We can conduct a similar analysis for proportions. For example, let us test the null hypothesis that 50% of the penguins in our research population are of the Adelie species:
 
 ```{r}
-one_prop_HT(data = penguins_clean, grouping = species, success = "Adelie", p = 0.5, alternative = "two.sided", alpha = 0.05)
+one_prop_HT(data = penguins_clean, binary = species, event = "Adelie", p = 0.5, alternative = "two.sided", alpha = 0.05)
 ```
 
 To obtain the confidence interval for this proportion:
 
 ```{r}
-one_prop_CI(data = penguins_clean, grouping = species, success = "Adelie", confidence = 0.95)
+one_prop_CI(data = penguins_clean, binary = species, event = "Adelie", confidence = 0.95)
 ```
 
 

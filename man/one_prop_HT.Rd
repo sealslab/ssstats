@@ -6,8 +6,8 @@
 \usage{
 one_prop_HT(
   data,
-  grouping,
-  success,
+  binary,
+  event,
   p = 0.5,
   alternative = "two.sided",
   alpha = 0.05
@@ -16,9 +16,9 @@ one_prop_HT(
 \arguments{
 \item{data}{Data frame or tibble.}
 
-\item{grouping}{Unquoted column name for the binary variable.}
+\item{binary}{Unquoted column name for the binary variable.}
 
-\item{success}{Character value indicating which level is considered "success".}
+\item{event}{Character value indicating which level is considered "success" or the "event of interest".}
 
 \item{p}{Numeric hypothesized proportion (default 0.5).}
 

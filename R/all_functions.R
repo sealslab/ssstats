@@ -202,20 +202,20 @@ one_mean_CI <- function(data, continuous, confidence = 0.95) {
 #' Calculate Proportion and Confidence Interval for a Binary Outcome
 #'
 #' @param data A data frame or tibble.
-#' @param grouping A binary grouping variable (unquoted).
-#' @param success The value in `grouping` considered a "success" (can be numeric, character, or factor).
+#' @param binary A binary grouping variable (unquoted).
+#' @param event The value in `binary` considered a "success" or the "event of interest" (can be numeric, character, or factor).
 #' @param confidence Confidence level for the interval (default 0.95).
 #' @importFrom tibble tibble
 #' @return A tibble with proportion estimate, number of successes, sample size, confidence level, and confidence interval bounds.
 #' @examples
-#' one_prop_CI(mtcars, am, success = 1)
+#' one_prop_CI(mtcars, am, event = 1)
 #' @export
-one_prop_CI <- function(data, grouping, success, confidence = 0.95) {
-  binary_vector <- data %>% dplyr::pull({{ grouping }}) %>% na.omit()
+one_prop_CI <- function(data, binary, event, confidence = 0.95) {
+  binary_vector <- data %>% dplyr::pull({{ binary }}) %>% na.omit()
 
   # Convert to character for consistent comparison
   binary_vector_chr <- as.character(binary_vector)
-  success_chr <- as.character(success)
+  success_chr <- as.character(event)
 
   n <- length(binary_vector_chr)
   x <- sum(binary_vector_chr == success_chr)
@@ -292,17 +292,17 @@ one_mean_HT <- function(data, continuous, mu = 0, alternative = "two.sided", alp
 #' One-sample z-test for a population proportion
 #'
 #' @param data Data frame or tibble.
-#' @param grouping Unquoted column name for the binary variable.
-#' @param success Character value indicating which level is considered "success".
+#' @param binary Unquoted column name for the binary variable.
+#' @param event Character value indicating which level is considered "success" or the "event of interest".
 #' @param p Numeric hypothesized proportion (default 0.5).
 #' @param alternative Character string specifying alternative hypothesis; "two.sided", "less", or "greater" (default "two.sided").
 #' @param alpha Numeric significance level (default 0.05).
 #' @return None. Prints formatted test results and conclusion.
 #' @export
-one_prop_HT <- function(data, grouping, success, p = 0.5, alternative = "two.sided", alpha = 0.05) {
-  binary_vector <- data %>% dplyr::pull({{ grouping }}) %>% na.omit()
+one_prop_HT <- function(data, binary, event, p = 0.5, alternative = "two.sided", alpha = 0.05) {
+  binary_vector <- data %>% dplyr::pull({{ binary }}) %>% na.omit()
   binary_vector_chr <- as.character(binary_vector)
-  success_chr <- as.character(success)
+  success_chr <- as.character(event)
 
   n <- length(binary_vector_chr)
   x <- sum(binary_vector_chr == success_chr)
@@ -2189,3 +2189,300 @@ r_squared <- function(data, outcome, function_of) {
 }
 
 
+#' Two-Sample Proportion Confidence Interval
+#'
+#' @param data A data frame or tibble
+#' @param outcome Unquoted binary outcome variable (e.g., "yes"/"no", 1/0)
+#' @param grouping Unquoted grouping variable with exactly 2 levels
+#' @param success The value of `outcome` considered a "success"
+#' @param confidence Confidence level for the interval (default is 0.95)
+#'
+#' @return A tibble with the estimated difference in proportions and confidence interval
+#' @export
+#'
+#' @examples
+#' two_prop_CI(data = penguins, outcome = sex, group = species, success = "female")
+two_prop_CI <- function(data, binary, grouping, event, confidence = 0.95) {
+  library(tidyverse)
+  library(rlang)
+  
+  outcome_sym <- enquo(binary)
+  group_sym   <- enquo(grouping)
+  
+  df <- data %>%
+    filter(!is.na(!!outcome_sym), !is.na(!!group_sym)) %>%
+    mutate(
+      outcome_chr = as.character(!!outcome_sym),
+      group_chr = as.character(!!group_sym),
+      success_flag = outcome_chr == as.character(event)
+    )
+  
+  # Check number of groups
+  group_levels <- df %>% pull(group_chr) %>% unique()
+  if (length(group_levels) != 2) {
+    stop("Grouping variable must have exactly two levels.")
+  }
+  
+  group1 <- group_levels[1]
+  group2 <- group_levels[2]
+  
+  summary_table <- df %>%
+    group_by(group_chr) %>%
+    summarise(
+      successes = sum(success_flag),
+      n = n(),
+      .groups = "drop"
+    ) %>%
+    arrange(match(group_chr, group_levels)) # keep consistent order
+  
+  # Extract counts
+  x <- summary_table$successes
+  n <- summary_table$n
+  
+  test <- prop.test(x = x, n = n, conf.level = confidence, correct = FALSE)
+  
+  tibble(
+    group1 = group1,
+    group2 = group2,
+    p1 = round(x[1] / n[1], 4),
+    p2 = round(x[2] / n[2], 4),
+    diff = round((x[1] / n[1]) - (x[2] / n[2]), 4),
+    conf_level = paste0(round(confidence * 100), "%"),
+    ci_lower = round(test$conf.int[1], 4),
+    ci_upper = round(test$conf.int[2], 4)
+  )
+}
+
+
+
+#' Two-Sample Hypothesis Test for Proportions
+#'
+#' @param data A data frame or tibble
+#' @param outcome Unquoted binary outcome variable (e.g., "yes"/"no", 1/0)
+#' @param grouping Unquoted grouping variable with exactly 2 levels
+#' @param success The value of `outcome` considered a "success"
+#' @param alternative Type of test: "two.sided", "less", or "greater"
+#' @param alpha Significance level (default = 0.05)
+#'
+#' @return Prints test result
+#' @export
+#'
+#' @examples
+#' two_prop_HT(data = penguins, outcome = sex, group = species, success = "female")
+two_prop_HT <- function(data, binary, grouping, event, p = 0, alternative = "two.sided", alpha = 0.05) {
+  library(tidyverse)
+  library(rlang)
+  library(glue)
+  
+  binary_sym   <- enquo(binary)
+  group_sym    <- enquo(grouping)
+  
+  df <- data %>%
+    filter(!is.na(!!binary_sym), !is.na(!!group_sym)) %>%
+    mutate(
+      outcome_chr = as.character(!!binary_sym),
+      group_chr = as.character(!!group_sym),
+      success_flag = outcome_chr == as.character(event)
+    )
+  
+  group_levels <- df %>% pull(group_chr) %>% unique()
+  if (length(group_levels) != 2) {
+    stop("Grouping variable must have exactly two levels. Found: ",
+         paste(group_levels, collapse = ", "))
+  }
+  
+  group1 <- group_levels[1]
+  group2 <- group_levels[2]
+  
+  summary_table <- df %>%
+    group_by(group_chr) %>%
+    summarise(
+      successes = sum(success_flag),
+      n = n(),
+      .groups = "drop"
+    ) %>%
+    arrange(match(group_chr, group_levels))
+  
+  x1 <- summary_table$successes[1]
+  x2 <- summary_table$successes[2]
+  n1 <- summary_table$n[1]
+  n2 <- summary_table$n[2]
+  p1 <- x1 / n1
+  p2 <- x2 / n2
+  phat_diff <- p1 - p2
+  
+  # Standard error using null p₀
+  SE <- sqrt((p1 * (1 - p1)) / n1 + (p2 * (1 - p2)) / n2)
+  
+  # z statistic
+  z_stat <- round((phat_diff - p) / SE, 2)
+  
+  # p-value based on alternative
+  p_val <- switch(alternative,
+                  "two.sided" = 2 * pnorm(-abs(z_stat)),
+                  "greater"   = pnorm(-z_stat),
+                  "less"      = pnorm(z_stat),
+                  stop("alternative must be one of 'two.sided', 'less', or 'greater'")
+  )
+  
+  p_text <- if (p_val < 0.001) "p < 0.001" else glue("p = {formatC(round(p_val, 3), format = 'f', digits = 3)}")
+  
+  cat(glue("Two-sample z-test for difference in proportions:\n\n"))
+  cat(glue("Group 1: {group1}, \n"))
+  cat(glue("Group 2: {group2}\n\n"))
+  cat(glue("Observed difference: {round(phat_diff, 4)}\n\n"))
+  cat(glue("Null: H₀: π₁ - π₂ = {p}\n\n"))
+  cat(glue("Alternative: H₁: π₁ - π₂ {alt_symbol(alternative)} {p}\n\n"))
+  cat(glue("Test statistic: z = {z_stat}\n\n"))
+  cat(glue("p-value: {p_text}\n\n"))
+  conclusion(p_val, alpha)
+}
+
+
+#' Chi-Square Goodness of Fit Test
+#'
+#' @param data A data frame or tibble
+#' @param categorical Unquoted categorical variable
+#' @param expected A named vector of expected proportions (should sum to 1). If NULL, equal proportions are assumed.
+#' @param alpha Significance level (default = 0.05)
+#'
+#' @return Printed test result
+#' @export
+goodness_of_fit <- function(data, categorical, expected = NULL, alpha = 0.05) {
+  library(tidyverse)
+  library(rlang)
+  library(glue)
+  
+  grouping_sym <- enquo(categorical)
+  
+  observed <- data %>%
+    filter(!is.na(!!grouping_sym)) %>%
+    count(category = !!grouping_sym) %>%
+    arrange(category)
+  
+  observed$category <- as.character(observed$category)
+  
+  # Use expected proportions if provided
+  if (is.null(expected)) {
+    k <- nrow(observed)
+    expected_props <- rep(1 / k, k)
+    names(expected_props) <- observed$category
+  } else {
+    if (!isTRUE(all.equal(sum(expected), 1))) {
+      stop("Expected proportions must sum to 1.")
+    }
+    if (!all(sort(names(expected)) == sort(observed$category))) {
+      stop("Names of expected proportions must match the observed group labels.")
+    }
+    expected_props <- expected[observed$category]  # reorder to match observed
+  }
+  
+  total_n <- sum(observed$n)
+  expected_counts <- total_n * expected_props
+  
+  test <- suppressWarnings(chisq.test(x = observed$n, p = expected_props))
+  
+  df <- test$parameter
+  chi2 <- round(test$statistic, 2)
+  p_val <- test$p.value
+  p_text <- if (p_val < 0.001) "p < 0.001" else glue("p = {formatC(round(p_val, 3), format = 'f', digits = 3)}")
+  
+  cat(glue("Chi-square goodness-of-fit test:\n\n"))
+  cat(glue("Null: H₀: Observed frequencies match expected proportions\n\n"))
+  cat(glue("Alternative: H₁: Observed frequencies do not match expected proportions\n\n"))
+  cat(glue("Test statistic: χ²({df}) = {chi2}\n\n"))
+  cat(glue("p-value: {p_text}\n\n"))
+  conclusion(p_val, alpha)
+}
+
+#' Chi-Square Test of Independence
+#'
+#' @param data A data frame or tibble
+#' @param var1 First unquoted categorical variable
+#' @param var2 Second unquoted categorical variable
+#' @param alpha Significance level (default = 0.05)
+#'
+#' @return Printed test results
+#' @export
+#'
+#' @examples
+#' independence_test(gss_cat, marital, religion)
+independence_test <- function(data, var1, var2, alpha = 0.05) {
+  
+  var1_sym <- enquo(var1)
+  var2_sym <- enquo(var2)
+  
+  # Clean and tabulate
+  df <- data %>%
+    filter(!is.na(!!var1_sym), !is.na(!!var2_sym)) %>%
+    mutate(var1_chr = as.character(!!var1_sym),
+           var2_chr = as.character(!!var2_sym))
+  
+  tbl <- table(df$var1_chr, df$var2_chr)
+  
+  # Run chi-square test (no Yates continuity correction)
+  test <- suppressWarnings(chisq.test(tbl, correct = FALSE))
+  
+  df_stat <- test$parameter
+  chi2 <- round(test$statistic, 2)
+  p_val <- test$p.value
+  p_text <- if (p_val < 0.001) "p < 0.001" else glue("p = {formatC(round(p_val, 3), format = 'f', digits = 3)}")
+  
+  var1_name <- as_label(var1_sym)
+  var2_name <- as_label(var2_sym)
+  
+  cat(glue("Chi-square test for independence:\n\n"))
+  cat(glue("Null: H₀: {var1_name} and {var2_name} are independent\n\n"))
+  cat(glue("Alternative: H₁: {var1_name} and {var2_name} depend on one another\n\n"))
+  cat(glue("Test statistic: χ²({df_stat}) = {chi2}\n\n"))
+  cat(glue("p-value: {p_text}\n\n"))
+  conclusion(p_val, alpha)
+}
+
+#' Logistic Regression Summary
+#'
+#' @param data A data frame or tibble
+#' @param outcome Unquoted binary outcome variable
+#' @param function_of Unquoted formula RHS (e.g., x1 + x2)
+#' @param confidence Confidence level for interval (default = 0.95)
+#'
+#' @return A tibble with coefficient estimates, SE, z, CI, and p-value
+#' @export
+#'
+#' @examples
+#' logistic_regression(mtcars, outcome = am, function_of = mpg + wt)
+logistic_regression <- function(data, outcome, function_of, confidence = 0.95) {
+  
+  # Capture variables
+  y <- enquo(outcome)
+  y_chr <- as_name(y)
+  rhs <- enquo(function_of)
+  rhs_chr <- quo_text(rhs)
+  
+  # Formula construction
+  formula <- as.formula(glue("{y_chr} ~ {rhs_chr}"))
+  
+  # Fit logistic regression
+  model <- glm(formula, data = data, family = binomial)
+  
+  # Get critical z
+  z_crit <- qnorm(1 - (1 - confidence) / 2)
+  
+  # Get tidy output and compute CI manually
+  broom::tidy(model) %>%
+    mutate(
+      lower_bound = estimate - z_crit * std.error,
+      upper_bound = estimate + z_crit * std.error,
+      p_value = ifelse(p.value < 0.001, "< 0.001",
+                       formatC(round(p.value, 3), format = "f", digits = 3))
+    ) %>%
+    transmute(
+      term,
+      estimate = round(estimate, 4),
+      std_error = round(std.error, 4),
+      z = round(statistic, 2),
+      lower_bound = round(lower_bound, 4),
+      upper_bound = round(upper_bound, 4),
+      p_value
+    )
+}

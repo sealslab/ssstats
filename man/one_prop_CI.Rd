@@ -4,14 +4,14 @@
 \alias{one_prop_CI}
 \title{Calculate Proportion and Confidence Interval for a Binary Outcome}
 \usage{
-one_prop_CI(data, grouping, success, confidence = 0.95)
+one_prop_CI(data, binary, event, confidence = 0.95)
 }
 \arguments{
 \item{data}{A data frame or tibble.}
 
-\item{grouping}{A binary grouping variable (unquoted).}
+\item{binary}{A binary grouping variable (unquoted).}
 
-\item{success}{The value in `grouping` considered a "success" (can be numeric, character, or factor).}
+\item{event}{The value in `binary` considered a "success" or the "event of interest" (can be numeric, character, or factor).}
 
 \item{confidence}{Confidence level for the interval (default 0.95).}
 }
@@ -22,5 +22,5 @@ A tibble with proportion estimate, number of successes, sample size, confidence 
 Calculate Proportion and Confidence Interval for a Binary Outcome
 }
 \examples{
-one_prop_CI(mtcars, am, success = 1)
+one_prop_CI(mtcars, am, event = 1)
 }
