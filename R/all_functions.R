@@ -183,20 +183,16 @@ n_pct <- function(data, row_var, col_var = NULL, rows = 3, digits = 1, denom = "
 one_mean_CI <- function(data, continuous, confidence = 0.95) {
   var_values <- data %>% dplyr::pull({{ continuous }})
   ttest <- t.test(var_values, conf.level = confidence)
-
+  
   mean_val <- mean(var_values, na.rm = TRUE)
   sd_val <- sd(var_values, na.rm = TRUE)
   ci_lower <- ttest$conf.int[1]
   ci_upper <- ttest$conf.int[2]
-  conf_percent <- confidence * 100
-
-  tibble(
-    mean = round(mean_val, 4),
-    sd = round(sd_val, 4),
-    conf_level = paste0(round(conf_percent), "%"),
-    ci_lower = round(ci_lower, 4),
-    ci_upper = round(ci_upper, 4)
-  )
+  conf_percent <- round(confidence * 100)
+  
+  cat(glue::glue("Sample mean: x̄ = {round(mean_val, 4)}\n"))
+  cat(glue::glue("Sample standard deviation: s = {round(sd_val, 4)}\n"))
+  cat(glue::glue("{conf_percent}% confidence interval for the mean: ({round(ci_lower, 4)}, {round(ci_upper, 4)})\n"))
 }
 
 #' Calculate Proportion and Confidence Interval for a Binary Outcome
@@ -212,28 +208,24 @@ one_mean_CI <- function(data, continuous, confidence = 0.95) {
 #' @export
 one_prop_CI <- function(data, binary, event, confidence = 0.95) {
   binary_vector <- data %>% dplyr::pull({{ binary }}) %>% na.omit()
-
+  
   # Convert to character for consistent comparison
   binary_vector_chr <- as.character(binary_vector)
   success_chr <- as.character(event)
-
+  
   n <- length(binary_vector_chr)
   x <- sum(binary_vector_chr == success_chr)
   p_hat <- x / n
-
+  
   test <- prop.test(x = x, n = n, conf.level = confidence, correct = FALSE)
   ci_lower <- test$conf.int[1]
   ci_upper <- test$conf.int[2]
-  conf_percent <- confidence * 100
-
-  tibble(
-    proportion = round(p_hat, 4),
-    successes = x,
-    sample_size = n,
-    conf_level = paste0(round(conf_percent), "%"),
-    ci_lower = round(ci_lower, 4),
-    ci_upper = round(ci_upper, 4)
-  )
+  conf_percent <- round(confidence * 100)
+  
+  cat(glue::glue("Sample proportion (p̂): {round(p_hat, 4)}\n"))
+  cat(glue::glue("Number of successes: {x}\n"))
+  cat(glue::glue("Sample size: {n}\n"))
+  cat(glue::glue("{conf_percent}% confidence interval for the population proportion: ({round(ci_lower, 4)}, {round(ci_upper, 4)})\n"))
 }
 
 #' Get Symbol Corresponding to Alternative Hypothesis
@@ -244,6 +236,16 @@ alt_symbol <- function(alt) {
   if (alt == "less") return("<")
   if (alt == "greater") return(">")
   return("≠")
+}
+
+#' Get Symbol Corresponding to Null Hypothesis
+#'
+#' @param alt Character string specifying alternative hypothesis. One of "less", "greater", or "two.sided".
+#' @return A character symbol ("≥", "≤", or "=") representing the null.
+null_symbol <- function(alt) {
+  if (alt == "less") return("≥")
+  if (alt == "greater") return("≤")
+  return("=")
 }
 
 #' Print Conclusion Based on p-value and Significance Level
@@ -282,7 +284,7 @@ one_mean_HT <- function(data, continuous, mu = 0, alternative = "two.sided", alp
   p_text <- if (p_val < 0.001) "p < 0.001" else glue::glue("p = {formatC(round(p_val, 3), format = 'f', digits = 3)}")
 
   cat(glue::glue("One-sample t-test for the population mean:\n\n"))
-  cat(glue::glue("Null: H0: μ = {mu}\n\n"))
+  cat(glue::glue("Null: H0: μ {null_symbol(alternative)} {mu}\n\n"))
   cat(glue::glue("Alternative: H1: μ {alt_symbol(alternative)} {mu}\n\n"))
   cat(glue::glue("Test statistic: t({df}) = {t_stat}\n\n"))
   cat(glue::glue("p-value: {p_text}\n\n"))
@@ -314,7 +316,7 @@ one_prop_HT <- function(data, binary, event, p = 0.5, alternative = "two.sided",
   p_text <- if (p_val < 0.001) "p < 0.001" else glue::glue("p = {formatC(round(p_val, 3), format = 'f', digits = 3)}")
 
   cat(glue::glue("One-sample z-test for the population proportion:\n\n"))
-  cat(glue::glue("Null: H0: π = {p}\n\n"))
+  cat(glue::glue("Null: H0: π {null_symbol(alternative)} {p}\n\n"))
   cat(glue::glue("Alternative: H1: π {alt_symbol(alternative)} {p}\n\n"))
   cat(glue::glue("Test statistic: z = {z_stat}\n\n"))
   cat(glue::glue("p-value: {p_text}\n\n"))
@@ -334,28 +336,46 @@ independent_mean_CI <- function(data, continuous, grouping, confidence = 0.95, v
   continuous_q <- rlang::enquo(continuous)
   
   var_equal <- ifelse(variance == "equal", TRUE, FALSE)
-
+  
   df <- data %>% dplyr::select(!!grouping_q, !!continuous_q) %>% tidyr::drop_na()
-
+  
   grp_name <- rlang::quo_name(grouping_q)
   cont_name <- rlang::quo_name(continuous_q)
-
+  
+  # Get the actual group names and order
+  groups <- unique(df[[grp_name]])
+  if (length(groups) != 2) stop("Grouping variable must have exactly two levels after removing NAs.")
+  group1 <- as.character(groups[1])
+  group2 <- as.character(groups[2])
+  
   fml <- stats::reformulate(termlabels = grp_name, response = cont_name)
-
+  
   ttest <- t.test(
     formula   = fml,
-    data      = data,
+    data      = df,
     conf.level= confidence,
     var.equal = var_equal
   )
-
+  
   conf_pct <- round(confidence * 100)
   ci_lower <- round(ttest$conf.int[1], 4)
   ci_upper <- round(ttest$conf.int[2], 4)
-  mean_diff<- round(diff(rev(ttest$estimate)), 4)
-
-  cat(glue::glue("The point estimate for the difference in means is x̄₁ − x̄₂ = {mean_diff}\n\n"))
-  cat(glue::glue("The {conf_pct}% confidence interval for μ₁ − μ₂ is ({ci_lower}, {ci_upper})\n\n"))
+  mean_diff <- round(diff(rev(ttest$estimate)), 4) # x̄1 - x̄2
+  
+  # Get group means for clarity
+  mean1 <- round(ttest$estimate[[1]], 4)
+  mean2 <- round(ttest$estimate[[2]], 4)
+  
+  # Extract group names from the ttest object (ensures correct order)
+  t_names <- names(ttest$estimate)
+  # Typically, names like "mean in group A", "mean in group B"
+  g1 <- sub("mean in group ", "", t_names[1])
+  g2 <- sub("mean in group ", "", t_names[2])
+  
+  cat(glue::glue("The point estimate for the difference in means is x̄[{g1}] − x̄[{g2}] = {mean_diff}\n"))
+  cat(glue::glue("Mean of {g1}: {mean1}\n"))
+  cat(glue::glue("Mean of {g2}: {mean2}\n"))
+  cat(glue::glue("The {conf_pct}% confidence interval for μ[{g1}] − μ[{g2}] is ({ci_lower}, {ci_upper})\n"))
 }
 
 #' Independent samples t-test for mean difference
@@ -372,68 +392,81 @@ independent_mean_CI <- function(data, continuous, grouping, confidence = 0.95, v
 independent_mean_HT <- function(data,
                                 continuous,
                                 grouping,
-                                alternative = "two",
+                                alternative = "two.sided",
                                 mu = 0,
                                 alpha = 0.05,
                                 variance = "equal") {
   grouping_q   <- rlang::enquo(grouping)
   continuous_q <- rlang::enquo(continuous)
-
+  
   var_equal <- ifelse(variance == "equal", TRUE, FALSE)
-
+  
   df <- data %>%
     dplyr::select(!!grouping_q, !!continuous_q) %>%
     tidyr::drop_na()
-
+  
   grp_name  <- rlang::quo_name(grouping_q)
   cont_name <- rlang::quo_name(continuous_q)
-
+  
+  # Get actual group names (after NA removal)
+  groups <- unique(df[[grp_name]])
+  if (length(groups) != 2) stop("Grouping variable must have exactly two levels after removing NAs.")
+  group1 <- as.character(groups[1])
+  group2 <- as.character(groups[2])
+  
   fml <- stats::reformulate(termlabels = grp_name, response = cont_name)
-
+  
   ttest <- t.test(
     formula    = fml,
-    data       = data,
+    data       = df,
     alternative= alternative,
     mu         = mu,
     conf.level = 1 - alpha,
     var.equal  = var_equal
   )
-
+  
   t_stat  <- round(ttest$statistic, 3)
   df_val  <- round(as.numeric(ttest$parameter), 2)
   p_val   <- ttest$p.value
-  est1    <- ttest$estimate[1]
-  est2    <- ttest$estimate[2]
-
+  est1    <- round(ttest$estimate[1], 4)
+  est2    <- round(ttest$estimate[2], 4)
+  
+  # Extract group names from ttest object to match estimate order
+  t_names <- names(ttest$estimate)
+  g1 <- sub("mean in group ", "", t_names[1])
+  g2 <- sub("mean in group ", "", t_names[2])
+  
   p_text <- if (p_val < 0.001) {
     "p < 0.001"
   } else {
     glue::glue("p = {formatC(round(p_val, 3), format = 'f', digits = 3)}")
   }
-
+  
+  # Print hypotheses with explicit group names
   null_text <- switch(
     alternative,
-    two = glue::glue("H₀: μ₁ − μ₂ = {mu}"),
-    two.sided = glue::glue("H₀: μ₁ − μ₂ = {mu}"),
-    less = glue::glue("H₀: μ₁ − μ₂ ≥ {mu}"),
-    greater = glue::glue("H₀: μ₁ − μ₂ ≤ {mu}")
+    two = glue::glue("H₀: μ[{g1}] − μ[{g2}] = {mu}"),
+    two.sided = glue::glue("H₀: μ[{g1}] − μ[{g2}] = {mu}"),
+    less = glue::glue("H₀: μ[{g1}] − μ[{g2}] ≥ {mu}"),
+    greater = glue::glue("H₀: μ[{g1}] − μ[{g2}] ≤ {mu}")
   )
   alt_text  <- switch(
     alternative,
-    two = glue::glue("H₁: μ₁ − μ₂ ≠ {mu}"),
-    two.sided = glue::glue("H₁: μ₁ − μ₂ ≠ {mu}"),
-    less      = glue::glue("H₁: μ₁ − μ₂ < {mu}"),
-    greater   = glue::glue("H₁: μ₁ − μ₂ > {mu}"),
+    two = glue::glue("H₁: μ[{g1}] − μ[{g2}] ≠ {mu}"),
+    two.sided = glue::glue("H₁: μ[{g1}] − μ[{g2}] ≠ {mu}"),
+    less      = glue::glue("H₁: μ[{g1}] − μ[{g2}] < {mu}"),
+    greater   = glue::glue("H₁: μ[{g1}] − μ[{g2}] > {mu}"),
     stop("`alternative` must be one of \"two\", \"two.sided\", \"less\", \"greater\"")
   )
-
+  
   test_type <- if (variance == "equal") {
     "Two-sample t-test for two independent means and equal variance:"
   } else {
     "Two-sample t-test for two independent means and unequal variance:"
   }
-
+  
   cat(glue::glue("{test_type}\n\n"))
+  cat(glue::glue("Group means: {g1} = {est1}, {g2} = {est2}\n\n"))
   cat(glue::glue("Null: {null_text}\n\n"))
   cat(glue::glue("Alternative: {alt_text}\n\n"))
   cat(glue::glue("Test statistic: t({df_val}) = {t_stat}\n\n"))
@@ -459,7 +492,7 @@ dependent_mean_median <- function(data, col1, col2, accuracy = 3) {
 
   before_vals <- df %>% dplyr::pull(!!before_q)
   after_vals  <- df %>% dplyr::pull(!!after_q)
-  diff_vals   <- after_vals - before_vals
+  diff_vals   <- before_vals - after_vals
 
   m_diff   <- mean(diff_vals,    na.rm = TRUE)
   s_diff   <- sd(diff_vals,      na.rm = TRUE)
@@ -478,7 +511,7 @@ dependent_mean_median <- function(data, col1, col2, accuracy = 3) {
 
   tibble::tibble(
     Variable       = c(
-      paste0(rlang::as_label(after_q), " – ", rlang::as_label(before_q)),
+      paste0(rlang::as_label(before_q), " – ", rlang::as_label(after_q)),
       rlang::as_label(before_q),
       rlang::as_label(after_q)
     ),
@@ -504,17 +537,24 @@ dependent_mean_median <- function(data, col1, col2, accuracy = 3) {
 #' @return None. Prints point estimate, standard deviation, and confidence interval.
 #' @export
 dependent_mean_CI <- function(data, col1, col2, confidence = 0.95) {
+  # Pull vectors
   x <- data %>% dplyr::pull({{ col1 }})
   y <- data %>% dplyr::pull({{ col2 }})
-
+  
+  # Only keep complete pairs
   valid <- complete.cases(x, y)
   x <- x[valid]
   y <- y[valid]
-
+  
+  # Group names as strings
+  group1 <- rlang::as_name(rlang::enquo(col1))
+  group2 <- rlang::as_name(rlang::enquo(col2))
+  
+  # Compute differences: always x - y (col1 - col2)
   differences <- x - y
-
+  
   ttest <- t.test(x, y, paired = TRUE, conf.level = confidence)
-
+  
   mean_diff <- mean(differences)
   sd_diff <- sd(differences)
   ci_lower <- round(ttest$conf.int[1], 4)
@@ -522,10 +562,10 @@ dependent_mean_CI <- function(data, col1, col2, confidence = 0.95) {
   mean_rounded <- round(mean_diff, 4)
   sd_rounded <- round(sd_diff, 4)
   conf_percent <- round(confidence * 100)
-
-  cat(glue::glue("The point estimate for the mean difference is x̄ = {mean_rounded}.\n\n"))
-  cat(glue::glue("The point estimate for the standard deviation of differences is s = {sd_rounded}.\n\n"))
-  cat(glue::glue("The {conf_percent}% confidence interval for the mean difference μ_d is ({ci_lower}, {ci_upper}).\n\n"))
+  
+  cat(glue::glue("The point estimate for the mean difference is x̄[{group1}] − x̄[{group2}] = {mean_rounded}.\n\n"))
+  cat(glue::glue("The standard deviation of differences is s = {sd_rounded}.\n\n"))
+  cat(glue::glue("The {conf_percent}% confidence interval for μ[{group1}] − μ[{group2}] is ({ci_lower}, {ci_upper}).\n\n"))
 }
 
 #' Paired mean difference hypothesis test
@@ -545,50 +585,55 @@ dependent_mean_HT <- function(data,
                               alternative = "two.sided",
                               mu = 0,
                               alpha = 0.05) {
+  # Pull vectors
   x <- data %>% dplyr::pull({{ col1 }})
   y <- data %>% dplyr::pull({{ col2 }})
-
+  
+  # Only keep complete pairs
   complete <- complete.cases(x, y)
   x <- x[complete]
   y <- y[complete]
-
+  
+  # Get group names as strings
+  group1 <- rlang::as_name(rlang::enquo(col1))
+  group2 <- rlang::as_name(rlang::enquo(col2))
+  
+  # Paired t-test
   ttest <- t.test(x, y,
                   paired = TRUE,
                   alternative = alternative,
                   mu = mu,
                   conf.level = 1 - alpha)
-
+  
   t_stat  <- round(ttest$statistic, 3)
   df      <- round(as.numeric(ttest$parameter), 2)
   p_val   <- ttest$p.value
   mean_d  <- round(mean(x - y), 4)
-
-  null_text <- switch(
-    alternative,
-    two = glue::glue("H₀: μ_d = {mu}"),
-    two.sided = glue::glue("H₀: μ_d = {mu}"),
-    less = glue::glue("H₀: μ_d ≥ {mu}"),
-    greater = glue::glue("H₀: μ_d ≤ {mu}")
-  )
-  alt_text  <- switch(
-    alternative,
-    two = glue::glue("H₁: μ_d ≠ {mu}"),
-    two.sided = glue::glue("H₁: μ_d ≠ {mu}"),
-    less      = glue::glue("H₁: μ_d < {mu}"),
-    greater   = glue::glue("H₁: μ_d > {mu}"),
-    stop("`alternative` must be one of \"two\", \"two.sided\", \"less\", \"greater\"")
-  )
-
-  p_text <- if (p_val < 0.001) "p < 0.001" else glue::glue("p = {formatC(round(p_val, 3), format = 'f', digits = 3)}")
-
-  cat(glue::glue("Paired t-test for the mean of differences:\n\n"))
+  
+  # Use helpers for symbols
+  null_sym <- null_symbol(alternative)
+  alt_sym  <- alt_symbol(alternative)
+  
+  # Print hypotheses with explicit group names and correct symbols
+  null_text <- glue::glue("H₀: μ[{group1}] − μ[{group2}] {null_sym} {mu}")
+  alt_text  <- glue::glue("H₁: μ[{group1}] − μ[{group2}] {alt_sym} {mu}")
+  
+  p_text <- if (p_val < 0.001) {
+    "p < 0.001"
+  } else {
+    glue::glue("p = {formatC(round(p_val, 3), format = 'f', digits = 3)}")
+  }
+  
+  cat(glue::glue("Paired t-test for the mean of differences (x̄[{group1}] − x̄[{group2}]):\n\n"))
   cat(glue::glue("Null: {null_text}\n\n"))
   cat(glue::glue("Alternative: {alt_text}\n\n"))
   cat(glue::glue("Test statistic: t({df}) = {t_stat}\n\n"))
+  cat(glue::glue("Sample mean difference: x̄[{group1}] − x̄[{group2}] = {mean_d}\n\n"))
   cat(glue::glue("p-value: {p_text}\n\n"))
-
+  
   conclusion(p_val, alpha)
 }
+
 #' normality_correlation
 #'
 #' Performs Shapiro-Wilk normality tests and generates Q-Q plots for each numeric variable
@@ -1063,22 +1108,26 @@ variances_HT <- function(data, continuous, grouping, alpha = 0.05) {
 independent_median_HT <- function(data,
                                   continuous, 
                                   grouping,
-                                  alternative = "two",
+                                  alternative = "two.sided",
                                   m = 0,
                                   alpha = 0.05) {
-  
-  
   # Capture the variables
-  grouping_q   <- enquo(grouping)
-  continuous_q <- enquo(continuous)
+  grouping_q   <- rlang::enquo(grouping)
+  continuous_q <- rlang::enquo(continuous)
   
   # Prepare the dataset
   df <- data %>%
     dplyr::select(!!grouping_q, !!continuous_q) %>%
     tidyr::drop_na()
   
-  grp_name  <- quo_name(grouping_q)
-  cont_name <- quo_name(continuous_q)
+  grp_name  <- rlang::quo_name(grouping_q)
+  cont_name <- rlang::quo_name(continuous_q)
+  
+  # Get unique group names in the order they appear
+  groups <- unique(df[[grp_name]])
+  if (length(groups) != 2) stop("Grouping variable must have exactly two levels after removing NAs.")
+  group1 <- as.character(groups[1])
+  group2 <- as.character(groups[2])
   
   # Create formula
   fml <- stats::reformulate(termlabels = grp_name, response = cont_name)
@@ -1100,32 +1149,26 @@ independent_median_HT <- function(data,
   p_text <- if (p_val < 0.001) {
     "p < 0.001"
   } else {
-    glue("p = {formatC(round(p_val, 3), format = 'f', digits = 3)}")
+    glue::glue("p = {formatC(round(p_val, 3), format = 'f', digits = 3)}")
   }
   
-  null_text <- switch(
-    alternative,
-    two = glue("H₀: M₁ - M₂ = {m}"),
-    two.sided = glue("H₀: M₁ - M₂ = {m}"),
-    less = glue("H₀: M₁ - M₂ ≥ {m}"),
-    greater = glue("H₀: M₁ - M₂ ≤ {m}"),
-    stop("`alternative` must be one of \"two\", \"less\", \"greater\"")
-  )
+  # Use helpers for symbols
+  null_sym <- null_symbol(alternative)
+  alt_sym  <- alt_symbol(alternative)
   
-  alt_text <- switch(
-    alternative,
-    two = glue("H₁: M₁ - M₂ ≠ {m}"),
-    two.sided = glue("H₁: M₁ - M₂ ≠ {m}"),
-    less = glue("H₁: M₁ - M₂ < {m}"),
-    greater = glue("H₁: M₁ - M₂ > {m}"),
-    stop("`alternative` must be one of \"two\", \"less\", \"greater\"")
-  )
+  null_text <- glue::glue("H₀: M[{group1}] − M[{group2}] {null_sym} {m}")
+  alt_text  <- glue::glue("H₁: M[{group1}] − M[{group2}] {alt_sym} {m}")
   
-  cat(glue("Wilcoxon Rank Sum Test for two independent medians\n\n"))
-  cat(glue("Null: {null_text}\n\n"))
-  cat(glue("Alternative: {alt_text}\n\n"))
-  cat(glue("Test statistic: T = {w_stat}\n\n"))
-  cat(glue("p-value: {p_text}\n\n"))
+  # Calculate and print group medians
+  med1 <- round(median(df[df[[grp_name]] == group1, cont_name]), 4)
+  med2 <- round(median(df[df[[grp_name]] == group2, cont_name]), 4)
+  
+  cat(glue::glue("Wilcoxon Rank Sum Test for two independent medians\n\n"))
+  cat(glue::glue("Group medians: {group1} = {med1}, {group2} = {med2}\n\n"))
+  cat(glue::glue("Null: {null_text}\n\n"))
+  cat(glue::glue("Alternative: {alt_text}\n\n"))
+  cat(glue::glue("Test statistic: T = {w_stat}\n\n"))
+  cat(glue::glue("p-value: {p_text}\n\n"))
   
   conclusion(p_val, alpha)
 }
@@ -1144,19 +1187,27 @@ independent_median_HT <- function(data,
 dependent_median_HT <- function(data,
                                 col1,
                                 col2,
-                                alternative = "two",
+                                alternative = "two.sided",
                                 m = 0,
                                 alpha = 0.05) {
   # Pull paired data
   x <- data %>% dplyr::pull({{ col1 }})
   y <- data %>% dplyr::pull({{ col2 }})
   
-  # Keep only complete cases
+  # Only keep complete pairs
   complete <- complete.cases(x, y)
   x <- x[complete]
   y <- y[complete]
   
-  # Run Wilcoxon signed-rank test
+  # Group names as strings
+  group1 <- rlang::as_name(rlang::enquo(col1))
+  group2 <- rlang::as_name(rlang::enquo(col2))
+  
+  # Calculate differences: col1 - col2
+  differences <- x - y
+  med_diff <- round(median(differences), 4)
+  
+  # Wilcoxon signed-rank test
   w_test <- wilcox.test(
     x, y,
     paired = TRUE,
@@ -1167,27 +1218,25 @@ dependent_median_HT <- function(data,
     exact = FALSE
   )
   
-  # Extract relevant results
   w_stat  <- round(w_test$statistic, 3)
   p_val   <- w_test$p.value
-  est_med <- round(w_test$estimate, 4)
   
-  # Null and alternative hypotheses
-  null_text <- glue::glue("H₀: M_d = {m}")
-  alt_text  <- switch(
-    alternative,
-    two = glue::glue("H₁: M_d ≠ {m}"),
-    two.sided = glue::glue("H₁: M_d ≠ {m}"),
-    less      = glue::glue("H₁: M_d < {m}"),
-    greater   = glue::glue("H₁: M_d > {m}"),
-    stop("`alternative` must be one of \"two\", \"two.sided\", \"less\", \"greater\"")
-  )
+  # Null and alternative hypotheses using helpers
+  null_sym <- null_symbol(alternative)
+  alt_sym  <- alt_symbol(alternative)
+  null_text <- glue::glue("H₀: M[{group1}] − M[{group2}] {null_sym} {m}")
+  alt_text  <- glue::glue("H₁: M[{group1}] − M[{group2}] {alt_sym} {m}")
   
-  # p-value text formatting
-  p_text <- if (p_val < 0.001) "p < 0.001" else glue::glue("p = {formatC(round(p_val, 3), format = 'f', digits = 3)}")
+  # p-value formatting
+  p_text <- if (p_val < 0.001) {
+    "p < 0.001"
+  } else {
+    glue::glue("p = {formatC(round(p_val, 3), format = 'f', digits = 3)}")
+  }
   
   # Print results
-  cat(glue::glue("Wilcoxon Signed-Rank Test for the median of differences:\n\n"))
+  cat(glue::glue("Wilcoxon Signed-Rank Test for the median of differences (M[{group1}] − M[{group2}]):\n\n"))
+  cat(glue::glue("Sample median difference: M[{group1}] − M[{group2}] = {med_diff}\n\n"))
   cat(glue::glue("Null: {null_text}\n\n"))
   cat(glue::glue("Alternative: {alt_text}\n\n"))
   cat(glue::glue("Test statistic: T = {w_stat}\n\n"))
@@ -1424,6 +1473,7 @@ ANOVA_assumptions <- function(data,
                               continuous, 
                               grouping) {
   library(tidyverse)
+  library(patchwork)
   
   # Capture tidy eval column names
   outcome_q <- rlang::enquo(continuous)
@@ -1444,7 +1494,7 @@ ANOVA_assumptions <- function(data,
   
   # Extract residuals, fitted values, group
   model_df <- df %>%
-    mutate(
+    dplyr::mutate(
       fitted = fitted(model),
       residuals = residuals(model)
     )
@@ -1454,7 +1504,7 @@ ANOVA_assumptions <- function(data,
     ggplot(aes(sample = residuals)) +
     stat_qq() +
     stat_qq_line() +
-    facet_wrap(vars(!!group_q)) +
+    facet_wrap(vars(!!sym(group_chr))) +
     theme_bw() +
     labs(title = "QQ Plots of Residuals by Group",
          y = "Sample Quantiles",
@@ -1470,7 +1520,7 @@ ANOVA_assumptions <- function(data,
          x = "Fitted Values",
          y = "Residuals")
   
-  # # 3. Boxplot of outcome by group
+  # 3. Boxplot of outcome by group (optional)
   # box_plot <- df %>%
   #   ggplot(aes(x = !!group_q, y = !!outcome_q)) +
   #   geom_boxplot() +
@@ -1481,7 +1531,7 @@ ANOVA_assumptions <- function(data,
   
   # Combine with patchwork
   combined_plot <- (qq_plot / rvf_plot) +
-    plot_annotation(title = "One-Way ANOVA Assumptions")
+    patchwork::plot_annotation(title = "One-Way ANOVA Assumptions")
   
   return(combined_plot)
 }
@@ -1873,6 +1923,8 @@ ANOVA2_assumptions <- function(data,
                                A,
                                B,
                                interaction = TRUE) {
+  library(ggplot2)
+  suppressPackageStartupMessages(library(patchwork))
   
   # --- capture names -------------------------------------------------------
   y_q <- rlang::enquo(continuous)
@@ -1888,8 +1940,8 @@ ANOVA2_assumptions <- function(data,
     dplyr::select(!!A_q, !!B_q, !!y_q) %>%
     dplyr::filter(!is.na(!!A_q), !is.na(!!B_q), !is.na(!!y_q)) %>%
     dplyr::mutate(
-      !!A_chr := as.factor(!!A_q),
-      !!B_chr := as.factor(!!B_q)
+      !!A_chr := as.factor(!!sym(A_chr)),
+      !!B_chr := as.factor(!!sym(B_chr))
     )
   
   # --- build & fit model ---------------------------------------------------
@@ -1903,7 +1955,7 @@ ANOVA2_assumptions <- function(data,
   
   # --- residual & fitted values -------------------------------------------
   model_df <- df %>%
-    mutate(
+    dplyr::mutate(
       fitted    = fitted(model),
       residuals = residuals(model),
       AB_cell   = interaction(!!sym(A_chr), !!sym(B_chr), sep = " : ")
@@ -1934,7 +1986,6 @@ ANOVA2_assumptions <- function(data,
          shape  = B_chr)
   
   # --- combine & return ----------------------------------------------------
-  suppressPackageStartupMessages(library(patchwork))
   combined_plot <- (qq_plot / rvf_plot) +
     patchwork::plot_annotation(
       title = glue::glue("Two-way ANOVA Assumptions")
@@ -2239,18 +2290,21 @@ two_prop_CI <- function(data, binary, grouping, event, confidence = 0.95) {
   x <- summary_table$successes
   n <- summary_table$n
   
-  test <- prop.test(x = x, n = n, conf.level = confidence, correct = FALSE)
+  # Calculate sample proportions
+  p1 <- x[1] / n[1]
+  p2 <- x[2] / n[2]
+  diff <- p1 - p2
   
-  tibble(
-    group1 = group1,
-    group2 = group2,
-    p1 = round(x[1] / n[1], 4),
-    p2 = round(x[2] / n[2], 4),
-    diff = round((x[1] / n[1]) - (x[2] / n[2]), 4),
-    conf_level = paste0(round(confidence * 100), "%"),
-    ci_lower = round(test$conf.int[1], 4),
-    ci_upper = round(test$conf.int[2], 4)
-  )
+  test <- prop.test(x = x, n = n, conf.level = confidence, correct = FALSE)
+  conf_percent <- round(confidence * 100)
+  ci_lower <- test$conf.int[1]
+  ci_upper <- test$conf.int[2]
+  
+  # Print results in a clear style
+  cat(glue::glue("Sample proportion ({group1}): {round(p1, 4)}\n"))
+  cat(glue::glue("Sample proportion ({group2}): {round(p2, 4)}\n"))
+  cat(glue::glue("Point estimate for the difference in proportions (p̂[{group1}] − p̂[{group2}]): {round(diff, 4)}\n"))
+  cat(glue::glue("{conf_percent}% confidence interval for p[{group1}] − p[{group2}]: ({round(ci_lower, 4)}, {round(ci_upper, 4)})\n"))
 }
 
 
@@ -2311,7 +2365,7 @@ two_prop_HT <- function(data, binary, grouping, event, p = 0, alternative = "two
   p2 <- x2 / n2
   phat_diff <- p1 - p2
   
-  # Standard error using null p₀
+  # Standard error for the difference in proportions
   SE <- sqrt((p1 * (1 - p1)) / n1 + (p2 * (1 - p2)) / n2)
   
   # z statistic
@@ -2327,12 +2381,18 @@ two_prop_HT <- function(data, binary, grouping, event, p = 0, alternative = "two
   
   p_text <- if (p_val < 0.001) "p < 0.001" else glue("p = {formatC(round(p_val, 3), format = 'f', digits = 3)}")
   
+  # Use helper functions for hypothesis symbols
+  null_sym <- null_symbol(alternative)
+  alt_sym  <- alt_symbol(alternative)
+  
   cat(glue("Two-sample z-test for difference in proportions:\n\n"))
-  cat(glue("Group 1: {group1}, \n"))
-  cat(glue("Group 2: {group2}\n\n"))
-  cat(glue("Observed difference: {round(phat_diff, 4)}\n\n"))
-  cat(glue("Null: H₀: π₁ - π₂ = {p}\n\n"))
-  cat(glue("Alternative: H₁: π₁ - π₂ {alt_symbol(alternative)} {p}\n\n"))
+  cat(glue("Group 1: {group1}\n"))
+  cat(glue("  Sample proportion = {round(p1, 4)} ({x1}/{n1})\n"))
+  cat(glue("Group 2: {group2}\n"))
+  cat(glue("  Sample proportion = {round(p2, 4)} ({x2}/{n2})\n\n"))
+  cat(glue("Point estimate for the difference: p̂[{group1}] − p̂[{group2}] = {round(phat_diff, 4)}\n\n"))
+  cat(glue("Null: H₀: π[{group1}] − π[{group2}] {null_sym} {p}\n\n"))
+  cat(glue("Alternative: H₁: π[{group1}] − π[{group2}] {alt_sym} {p}\n\n"))
   cat(glue("Test statistic: z = {z_stat}\n\n"))
   cat(glue("p-value: {p_text}\n\n"))
   conclusion(p_val, alpha)
