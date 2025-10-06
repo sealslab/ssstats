@@ -8,7 +8,7 @@ independent_median_HT(
   data,
   continuous,
   grouping,
-  alternative = "two",
+  alternative = "two.sided",
   m = 0,
   alpha = 0.05
 )

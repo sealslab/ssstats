@@ -8,7 +8,7 @@ independent_mean_HT(
   data,
   continuous,
   grouping,
-  alternative = "two",
+  alternative = "two.sided",
   mu = 0,
   alpha = 0.05,
   variance = "equal"

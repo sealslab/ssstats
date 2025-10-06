@@ -4,7 +4,14 @@
 \alias{dependent_median_HT}
 \title{Paired median difference hypothesis test}
 \usage{
-dependent_median_HT(data, col1, col2, alternative = "two", m = 0, alpha = 0.05)
+dependent_median_HT(
+  data,
+  col1,
+  col2,
+  alternative = "two.sided",
+  m = 0,
+  alpha = 0.05
+)
 }
 \arguments{
 \item{data}{Data frame or tibble.}
