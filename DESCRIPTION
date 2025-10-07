@@ -21,7 +21,7 @@ Imports: broom, car, dplyr, FSA, ggplot2, ggpubr, glue, gt, janitor,
         scales, tibble, tidyr
 Suggests: knitr, rmarkdown, tidyverse
 VignetteBuilder: knitr
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3
 NeedsCompilation: no
 Packaged: 2025-07-22 03:26:10 UTC; ihsanbuker
 Author: Ihsan Buker [aut, cre], Samantha Seals [aut]

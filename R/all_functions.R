@@ -255,7 +255,7 @@ null_symbol <- function(alt) {
 #' @return None. Prints conclusion to console.
 #' @export
 conclusion <- function(p_val, alpha) {
-  p_text <- if (p_val < 0.001) "< 0.001" else as.character(round(p_val, 4))
+  p_text <- if (p_val < 0.001) "< 0.001" else as.character(round(p_val, 3))
 
   if (p_val < alpha) {
     cat(glue::glue("Conclusion: Reject the null hypothesis (p = {p_text} < α = {alpha})\n\n"))
@@ -1123,6 +1123,12 @@ independent_median_HT <- function(data,
   grp_name  <- rlang::quo_name(grouping_q)
   cont_name <- rlang::quo_name(continuous_q)
   
+  if (is.factor(df[[cont_name]])) {
+    df[[cont_name]] <- as.numeric(as.character(df[[cont_name]]))
+  } else {
+    df[[cont_name]] <- as.numeric(df[[cont_name]])
+  }
+  
   # Get unique group names in the order they appear
   groups <- unique(df[[grp_name]])
   if (length(groups) != 2) stop("Grouping variable must have exactly two levels after removing NAs.")
@@ -1160,8 +1166,8 @@ independent_median_HT <- function(data,
   alt_text  <- glue::glue("H₁: M[{group1}] − M[{group2}] {alt_sym} {m}")
   
   # Calculate and print group medians
-  med1 <- round(median(df[df[[grp_name]] == group1, cont_name]), 4)
-  med2 <- round(median(df[df[[grp_name]] == group2, cont_name]), 4)
+  med1 <- round(median(df[df[[grp_name]] == group1, ][[cont_name]]), 4)
+  med2 <- round(median(df[df[[grp_name]] == group2, ][[cont_name]]), 4)
   
   cat(glue::glue("Wilcoxon Rank Sum Test for two independent medians\n\n"))
   cat(glue::glue("Group medians: {group1} = {med1}, {group2} = {med2}\n\n"))
