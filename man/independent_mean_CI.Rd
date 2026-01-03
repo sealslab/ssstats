@@ -9,7 +9,8 @@ independent_mean_CI(
   continuous,
   grouping,
   confidence = 0.95,
-  variance = "equal"
+  variance = "equal",
+  reference = NULL
 )
 }
 \arguments{
@@ -17,9 +18,17 @@ independent_mean_CI(
 
 \item{continuous}{Unquoted column name for continuous outcome.}
 
-\item{grouping}{Unquoted column name for grouping variable (factor).}
+\item{grouping}{Unquoted column name for grouping variable (factor or character).}
 
 \item{confidence}{Confidence level for interval (default 0.95).}
+
+\item{variance}{Character string; "equal" (default) or "unequal" variance assumption.}
+
+\item{reference}{Optional character string naming the reference group. Must be quoted and
+match one of the grouping values exactly. If provided, the output and CI will be reported
+as μ[reference] - μ[other]. If NULL (default) the order is determined by:
+- if grouping is a factor, the factor level order (only levels present after NA removal),
+- otherwise, the order of first appearance in the data after NA removal.}
 }
 \value{
 None. Prints the confidence interval and point estimate.

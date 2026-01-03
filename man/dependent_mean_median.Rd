@@ -13,11 +13,12 @@ dependent_mean_median(data, col1, col2, accuracy = 3)
 
 \item{col2}{Unquoted column name for "after" values.}
 
-\item{accuracy}{Integer rounding digits for summary statistics (default 1).}
+\item{accuracy}{Integer rounding digits for summary statistics (default 3).}
 }
 \value{
-A tibble summarizing mean (SD) and median (IQR) for before, after, and their differences.
+None — prints a table and returns invisibly NULL.
 }
 \description{
-Paired mean/median summary table
+Produces a simple printed table (not a tibble) summarizing mean (SD) and
+median (IQR) for the "before", "after", and their difference (before - after).
 }

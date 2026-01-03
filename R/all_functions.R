@@ -1,51 +1,78 @@
-#' anova_check
-#'
+#' reg_check
+#' 
 #' Produces diagnostic plots to assess ANOVA (and regression) assumptions
 #' visually from a fitted linear model object.
 #' This includes residuals vs fitted values plot, histogram of residuals
 #' with normal curve overlay, and Q-Q plot of standardized residuals.
 #'
-#' @param model A fitted regression model object of class \code{lm}, \code{glm}, or \code{aov}.
+#' @title Diagnostic Plots for Regression Models
+#' @description Creates diagnostic plots for a fitted regression model object or directly from data and variables.
+#'
+#' @param model Either a fitted regression model object of class \code{lm}, \code{glm}, or \code{aov}, 
+#'              or \code{NULL} if using \code{data}, \code{continuous}, and \code{function_of}.
+#' @param data (Optional) A data frame containing the data.
+#' @param continuous (Optional) The numeric predictor or outcome column in \code{data}.
+#' @param function_of (Optional) The grouping or explanatory column in \code{data}.
 #'
 #' @return A \code{ggpubr} arranged ggplot object containing three diagnostic plots.
 #'
 #' @examples
 #' \dontrun{
+#' # Using an lm() object
 #' fit <- lm(bill_length_mm ~ bill_depth_mm, data = palmerpenguins::penguins)
-#' anova_check(fit)
+#' reg_check(fit)
+#'
+#' # Using data, continuous and function_of
+#' reg_check(data = palmerpenguins::penguins, 
+#'           continuous = bill_length_mm, function_of = bill_depth_mm)
 #' }
 #'
 #' @import ggplot2
 #' @import ggpubr
 #' @export
-anova_check <- function(model) {
-  # Check class of model
-  if (!any(class(model) %in% c("lm", "aov", "glm"))) {
-    stop("Not a valid regression model.
-         Make sure object is created via `lm()`, `glm()`, or `aov()`")
-  }
 
+reg_check <- function(model = NULL, data = NULL, continuous = NULL, function_of = NULL) {
+  # Check for model input or data-driven input
+  if (!is.null(model)) {
+    # Ensure the provided model is valid
+    if (!inherits(model, c("lm", "glm", "aov"))) {
+      stop("The `model` argument must be a regression model of class 'lm', 'glm', or 'aov'.")
+    }
+  } else if (!is.null(data) && !is.null(continuous) && !is.null(function_of)) {
+    # Ensure data-driven inputs are provided correctly
+    outcome_q <- rlang::enquo(continuous)
+    group_q <- rlang::enquo(function_of)
+    
+    # Prepare formula for lm() using data and columns
+    outcome_chr <- rlang::as_name(outcome_q)
+    group_chr <- rlang::as_name(group_q)
+    formula <- as.formula(paste0(outcome_chr, " ~ ", group_chr))
+    model <- lm(formula, data = data)
+  } else {
+    stop("Must provide either a `model` object or `data`, `continuous`, and `function_of`.")
+  }
+  
   # Extract residuals and fitted values
   res <- residuals(model)
   fitted <- fitted.values(model)
-  stdresid <- rstandard(model)  # standardized residuals
-
+  stdresid <- rstandard(model)  # Standardized residuals
+  
   # Create data frame for plotting
   df <- data.frame(fitted = fitted, resid = res, stdresid = stdresid)
-
+  
   # Residuals vs Fitted plot
   res_fitted <- ggplot2::ggplot(df, ggplot2::aes(x = fitted, y = resid)) +
+    ggplot2::geom_point(color = "#C5C4C4") +
+    ggplot2::labs(y = "Residuals", x = "Fitted values",
+                  title = "Scatterplot of Residuals") +
     ggplot2::geom_hline(yintercept = 0, linetype = "dashed",
                         color = "black", linewidth = 1) +
-    ggplot2::geom_point(color = "#6A6C6E") +
-    ggplot2::labs(y = "Residuals", x = "Fitted values",
-                  title = "Residuals vs Fitted Plot") +
     ggplot2::theme_classic()
-
+  
   # Histogram of residuals with normal curve
   res_his <- ggplot2::ggplot(df, ggplot2::aes(x = resid)) +
     ggplot2::geom_histogram(aes(y = after_stat(density)),
-                            colour = "black", fill = "#6A6C6E", bins = 30) +
+                            colour = "black", fill = "#C5C4C4", bins = 30) +
     ggplot2::stat_function(fun = stats::dnorm,
                            args = list(mean = mean(res), sd = sd(res)),
                            color = "black", linewidth = 1) +
@@ -55,21 +82,87 @@ anova_check <- function(model) {
     ggplot2::theme_classic() +
     ggplot2::theme(axis.ticks.y = ggplot2::element_blank(),
                    axis.text.y = ggplot2::element_blank())
-
+  
   # Q-Q plot of standardized residuals
   qq_res <- ggplot2::ggplot(df, ggplot2::aes(sample = stdresid)) +
-    ggplot2::stat_qq(color = "#6A6C6E") +
+    ggplot2::stat_qq(color = "#C5C4C4") +
     ggplot2::stat_qq_line(color = "black", linewidth = 1, linetype = "dashed") +
     ggplot2::labs(x = "Theoretical Quantiles", y = "Standardized Residuals",
                   title = "Q-Q Plot of Standardized Residuals") +
     ggplot2::theme_classic()
-
+  
   # Arrange plots together
-  out <- ggpubr::ggarrange(res_fitted, res_his, qq_res, ncol = 2, nrow = 2,
+  out <- ggpubr::ggarrange(qq_res, res_his, res_fitted, ncol = 2, nrow = 2,
                            labels = c("A", "B", "C"))
-
+  
   return(out)
 }
+
+#' @title Residuals vs Fitted Diagnostic Plot
+#' @description Creates a residuals vs fitted values scatterplot for a fitted regression model object or directly from data and variables.
+#'
+#' @param model Either a fitted regression model object of class \code{lm}, \code{glm}, or \code{aov}, 
+#'              or \code{NULL} if using \code{data}, \code{continuous}, and \code{function_of}.
+#' @param data (Optional) A data frame containing the data.
+#' @param continuous (Optional) The numeric predictor or outcome column in \code{data}.
+#' @param function_of (Optional) The grouping or explanatory column in \code{data}.
+#'
+#' @return A \code{ggplot2} object representing the scatterplot of residuals vs fitted values.
+#'
+#' @examples
+#' \dontrun{
+#' # Using an lm() object
+#' fit <- lm(bill_length_mm ~ bill_depth_mm, data = palmerpenguins::penguins)
+#' resid_fitted_plot(fit)
+#'
+#' # Using data, continuous and function_of
+#' resid_fitted_plot(data = palmerpenguins::penguins, 
+#'                   continuous = bill_length_mm, function_of = bill_depth_mm)
+#' }
+#'
+#' @import ggplot2
+#' @export
+
+variance_check <- function(model = NULL, data = NULL, continuous = NULL, function_of = NULL) {
+  # Check for model input or data-driven input
+  if (!is.null(model)) {
+    # Ensure the provided model is valid
+    if (!inherits(model, c("lm", "glm", "aov"))) {
+      stop("The `model` argument must be a regression model of class 'lm', 'glm', or 'aov'.")
+    }
+  } else if (!is.null(data) && !is.null(continuous) && !is.null(function_of)) {
+    # Ensure data-driven inputs are provided correctly
+    outcome_q <- rlang::enquo(continuous)
+    group_q <- rlang::enquo(function_of)
+    
+    # Prepare formula for lm() using data and columns
+    outcome_chr <- rlang::as_name(outcome_q)
+    group_chr <- rlang::as_name(group_q)
+    formula <- as.formula(paste0(outcome_chr, " ~ ", group_chr))
+    model <- lm(formula, data = data)
+  } else {
+    stop("Must provide either a `model` object or `data`, `continuous`, and `function_of`.")
+  }
+  
+  # Create residuals vs fitted plot
+  df <- data.frame(
+    fitted = fitted.values(model),
+    resid = residuals(model)
+  )
+  
+  res_fitted <- ggplot2::ggplot(df, ggplot2::aes(x = fitted, y = resid)) +
+    ggplot2::geom_point(color = "#C5C4C4") +
+    ggplot2::labs(y = "Residuals", x = "Fitted values",
+                  title = "Scatterplot of Residuals vs Fitted") +
+    ggplot2::geom_hline(yintercept = 0, linetype = "dashed",
+                        color = "black", linewidth = 1) +
+    ggplot2::theme_classic()
+  
+  return(res_fitted)
+}
+
+
+
 #' Summarize numeric variables with mean (SD) and median (IQR)
 #'
 #' @param data A data frame containing variables to summarize.
@@ -122,51 +215,77 @@ mean_median <- function(data, ...) {
 #' n_pct(mtcars, cyl, gear)
 #' }
 #' @export
-n_pct <- function(data, row_var, col_var = NULL, rows = 3, digits = 1, denom = "col") {
+n_pct <- function(data, row_var, col_var = NULL,
+                  rows = NULL, digits = 1, denom = "col",
+                  default_rows = 10, require_rows_if_truncated = TRUE) {
+  
   row_var_enquo <- rlang::enquo(row_var)
   col_var_enquo <- rlang::enquo(col_var)
-
+  
+  rows_user_supplied <- !is.null(rows)
+  if (is.null(rows)) rows <- default_rows
+  
   if (rlang::quo_is_null(col_var_enquo)) {
-    # One-way table
     tab_n <- janitor::tabyl(data, !!row_var_enquo)
     total_n <- sum(tab_n[[2]])
-
+    
     tab_oneway <- tab_n %>%
-      mutate(
+      dplyr::mutate(
         pct = .[[2]] / total_n,
         pct_fmt = scales::percent(pct, accuracy = 10^(-digits)),
         `n (pct)` = paste0(.[[2]], " (", pct_fmt, ")")
       ) %>%
-      select(!!rlang::as_name(row_var_enquo), `n (pct)`) %>%
-      slice_head(n = rows)
-
-    print(tab_oneway)
-    invisible(tab_oneway)
-
+      dplyr::select(!!rlang::as_name(row_var_enquo), `n (pct)`)
+    
+    n_total <- nrow(tab_oneway)
+    
+    if (require_rows_if_truncated && !rows_user_supplied && n_total > rows) {
+      stop(
+        sprintf(
+          "n_pct(): showing first %d of %d rows. Re-run with rows = %d (or larger).",
+          rows, n_total, n_total
+        ),
+        call. = FALSE
+      )
+    }
+    
+    tab_oneway %>% dplyr::slice_head(n = rows)
+    
   } else {
-    # Two-way table
     tab_n <- janitor::tabyl(data, !!row_var_enquo, !!col_var_enquo)
     tab_pct <- janitor::adorn_percentages(tab_n, denominator = denom)
     tab_fmt <- janitor::adorn_pct_formatting(tab_pct, digits = digits)
-
+    
     row_var_name <- rlang::as_name(row_var_enquo)
-
+    
     tab_n_long <- tab_n %>%
-      pivot_longer(-1, names_to = "col", values_to = "n")
-
+      tidyr::pivot_longer(-1, names_to = "col", values_to = "n")
+    
     tab_fmt_long <- tab_fmt %>%
-      pivot_longer(-1, names_to = "col", values_to = "pct")
-
-    tab_joined <- left_join(tab_n_long, tab_fmt_long, by = c(row_var_name, "col")) %>%
-      mutate(`n (pct)` = paste0(n, " (", pct, ")")) %>%
-      select(all_of(row_var_name), col, `n (pct)`) %>%
-      pivot_wider(names_from = col, values_from = `n (pct)`) %>%
-      slice_head(n = rows)
-
-    print(tab_joined)
-    invisible(tab_joined)
+      tidyr::pivot_longer(-1, names_to = "col", values_to = "pct")
+    
+    tab_joined <- dplyr::left_join(tab_n_long, tab_fmt_long, by = c(row_var_name, "col")) %>%
+      dplyr::mutate(`n (pct)` = paste0(n, " (", pct, ")")) %>%
+      dplyr::select(dplyr::all_of(row_var_name), col, `n (pct)`) %>%
+      tidyr::pivot_wider(names_from = col, values_from = `n (pct)`)
+    
+    n_total <- nrow(tab_joined)
+    
+    if (require_rows_if_truncated && !rows_user_supplied && n_total > rows) {
+      stop(
+        sprintf(
+          "n_pct(): showing first %d of %d rows. Re-run with rows = %d (or larger).",
+          rows, n_total, n_total
+        ),
+        call. = FALSE
+      )
+    }
+    
+    tab_joined %>% dplyr::slice_head(n = rows)
   }
 }
+
+
 
 #' Calculate Mean and Confidence Interval for a Continuous Variable
 #'
@@ -190,9 +309,9 @@ one_mean_CI <- function(data, continuous, confidence = 0.95) {
   ci_upper <- ttest$conf.int[2]
   conf_percent <- round(confidence * 100)
   
-  cat(glue::glue("Sample mean: x̄ = {round(mean_val, 4)}\n"))
-  cat(glue::glue("Sample standard deviation: s = {round(sd_val, 4)}\n"))
-  cat(glue::glue("{conf_percent}% confidence interval for the mean: ({round(ci_lower, 4)}, {round(ci_upper, 4)})\n"))
+  cat(glue::glue("Sample mean: x̄ = {round(mean_val, 4)}\n\n"))
+  cat(glue::glue("Sample standard deviation: s = {round(sd_val, 4)}\n\n"))
+  cat(glue::glue("{conf_percent}% confidence interval for the mean: ({round(ci_lower, 4)}, {round(ci_upper, 4)})\n\n"))
 }
 
 #' Calculate Proportion and Confidence Interval for a Binary Outcome
@@ -222,10 +341,8 @@ one_prop_CI <- function(data, binary, event, confidence = 0.95) {
   ci_upper <- test$conf.int[2]
   conf_percent <- round(confidence * 100)
   
-  cat(glue::glue("Sample proportion (p̂): {round(p_hat, 4)}\n"))
-  cat(glue::glue("Number of successes: {x}\n"))
-  cat(glue::glue("Sample size: {n}\n"))
-  cat(glue::glue("{conf_percent}% confidence interval for the population proportion: ({round(ci_lower, 4)}, {round(ci_upper, 4)})\n"))
+  cat(glue::glue("p̂= {round(p_hat, 3)} ({x}/{n})\n\n"))
+  cat(glue::glue("{conf_percent}% confidence interval for π: ({round(ci_lower, 4)}, {round(ci_upper, 4)})\n"))
 }
 
 #' Get Symbol Corresponding to Alternative Hypothesis
@@ -327,66 +444,135 @@ one_prop_HT <- function(data, binary, event, p = 0.5, alternative = "two.sided",
 #'
 #' @param data Data frame or tibble.
 #' @param continuous Unquoted column name for continuous outcome.
-#' @param grouping Unquoted column name for grouping variable (factor).
+#' @param grouping Unquoted column name for grouping variable (factor or character).
 #' @param confidence Confidence level for interval (default 0.95).
+#' @param variance Character string; "equal" (default) or "unequal" variance assumption.
+#' @param reference Optional character string naming the reference group. Must be quoted and
+#'   match one of the grouping values exactly. If provided, the output and CI will be reported
+#'   as μ[reference] - μ[other]. If NULL (default) the order is determined by:
+#'   - if grouping is a factor, the factor level order (only levels present after NA removal),
+#'   - otherwise, the order of first appearance in the data after NA removal.
 #' @return None. Prints the confidence interval and point estimate.
 #' @export
-independent_mean_CI <- function(data, continuous, grouping, confidence = 0.95, variance = "equal") {
+independent_mean_CI <- function(data,
+                                continuous,
+                                grouping,
+                                confidence = 0.95,
+                                variance = "equal",
+                                reference = NULL) {
   grouping_q  <- rlang::enquo(grouping)
   continuous_q <- rlang::enquo(continuous)
   
+  # validate confidence
+  if (!is.numeric(confidence) || confidence <= 0 || confidence >= 1) {
+    stop("`confidence` must be a numeric value strictly between 0 and 1.")
+  }
+  
   var_equal <- ifelse(variance == "equal", TRUE, FALSE)
   
-  df <- data %>% dplyr::select(!!grouping_q, !!continuous_q) %>% tidyr::drop_na()
+  df <- data %>%
+    dplyr::select(!!grouping_q, !!continuous_q) %>%
+    tidyr::drop_na()
   
   grp_name <- rlang::quo_name(grouping_q)
   cont_name <- rlang::quo_name(continuous_q)
   
-  # Get the actual group names and order
-  groups <- unique(df[[grp_name]])
-  if (length(groups) != 2) stop("Grouping variable must have exactly two levels after removing NAs.")
-  group1 <- as.character(groups[1])
-  group2 <- as.character(groups[2])
+  # Ensure exactly two groups present after NA removal
+  groups_present <- unique(df[[grp_name]])
+  groups_chr <- as.character(groups_present)
+  if (length(groups_chr) != 2) {
+    stop("Grouping variable must have exactly two levels after removing NAs.")
+  }
   
+  # Determine order: respect factor levels if provided, otherwise first appearance.
+  if (is.factor(df[[grp_name]])) {
+    orig_levels <- base::levels(df[[grp_name]])
+    levels_order <- orig_levels[orig_levels %in% groups_chr]
+    if (length(levels_order) != 2) {
+      # fallback to appearance order if factor levels do not produce exactly two present levels
+      levels_order <- groups_chr
+    }
+  } else {
+    levels_order <- groups_chr
+  }
+  
+  # If reference supplied, validate and set as first level
+  if (!is.null(reference)) {
+    if (!is.character(reference) || length(reference) != 1) {
+      stop("`reference` must be a single quoted character string matching a group value.")
+    }
+    if (!(reference %in% levels_order)) {
+      stop(glue::glue("`reference` '{reference}' not found among grouping values: {paste(levels_order, collapse = ', ')}"))
+    }
+    other <- setdiff(levels_order, reference)
+    levels_order <- c(reference, other)
+  }
+  
+  # Relevel the grouping column so that t.test and our displays follow the chosen order
+  df[[grp_name]] <- factor(as.character(df[[grp_name]]), levels = levels_order)
+  
+  # Check sample sizes
+  group_counts <- df %>% dplyr::group_by(!!grouping_q) %>% dplyr::summarise(n = dplyr::n(), .groups = "drop")
+  if (any(group_counts$n < 2)) {
+    bad <- group_counts %>% dplyr::filter(n < 2)
+    stop(glue::glue("Each group must have at least 2 non-missing observations. Problem group(s): {paste(bad[[grp_name]], collapse=', ')}"))
+  }
+  
+  # Compute group summaries (we'll use these for display and for the point estimate)
+  grp_stats <- df %>%
+    dplyr::group_by(!!grouping_q) %>%
+    dplyr::summarise(
+      n = dplyr::n(),
+      mean = mean(!!continuous_q),
+      sd = stats::sd(!!continuous_q),
+      .groups = "drop"
+    )
+  
+  g1 <- levels_order[1]
+  g2 <- levels_order[2]
+  
+  mean1 <- grp_stats %>% dplyr::filter(!!grouping_q == g1) %>% dplyr::pull(mean)
+  mean2 <- grp_stats %>% dplyr::filter(!!grouping_q == g2) %>% dplyr::pull(mean)
+  
+  # Run the t.test with the chosen order and var.equal mapping
   fml <- stats::reformulate(termlabels = grp_name, response = cont_name)
-  
-  ttest <- t.test(
-    formula   = fml,
-    data      = df,
-    conf.level= confidence,
-    var.equal = var_equal
+  ttest <- stats::t.test(
+    formula    = fml,
+    data       = df,
+    conf.level = confidence,
+    var.equal  = var_equal
   )
   
+  # Format outputs: means 2 digits, ttest-related values keep previous precision choices
+  mean1_f <- formatC(round(mean1, 2), format = "f", digits = 2)
+  mean2_f <- formatC(round(mean2, 2), format = "f", digits = 2)
+  mean_diff <- formatC(round(mean1 - mean2, 2), format = "f", digits = 2)
+  
+  ci_lower <- formatC(round(ttest$conf.int[1], 4), format = "f", digits = 4)
+  ci_upper <- formatC(round(ttest$conf.int[2], 4), format = "f", digits = 4)
+  
   conf_pct <- round(confidence * 100)
-  ci_lower <- round(ttest$conf.int[1], 4)
-  ci_upper <- round(ttest$conf.int[2], 4)
-  mean_diff <- round(diff(rev(ttest$estimate)), 4) # x̄1 - x̄2
   
-  # Get group means for clarity
-  mean1 <- round(ttest$estimate[[1]], 4)
-  mean2 <- round(ttest$estimate[[2]], 4)
-  
-  # Extract group names from the ttest object (ensures correct order)
-  t_names <- names(ttest$estimate)
-  # Typically, names like "mean in group A", "mean in group B"
-  g1 <- sub("mean in group ", "", t_names[1])
-  g2 <- sub("mean in group ", "", t_names[2])
-  
-  cat(glue::glue("The point estimate for the difference in means is x̄[{g1}] − x̄[{g2}] = {mean_diff}\n"))
-  cat(glue::glue("Mean of {g1}: {mean1}\n"))
-  cat(glue::glue("Mean of {g2}: {mean2}\n"))
+  cat(glue::glue("The point estimate for the difference in means is x̄[{g1}] − x̄[{g2}] = {mean_diff}\n\n"))
+  cat(glue::glue("Mean of {g1}: {mean1_f}\n\n"))
+  cat(glue::glue("Mean of {g2}: {mean2_f}\n\n"))
   cat(glue::glue("The {conf_pct}% confidence interval for μ[{g1}] − μ[{g2}] is ({ci_lower}, {ci_upper})\n"))
+  
+  invisible(NULL)
 }
 
 #' Independent samples t-test for mean difference
 #'
 #' @param data Data frame or tibble.
 #' @param continuous Unquoted column name for continuous outcome.
-#' @param grouping Unquoted column name for grouping variable (factor).
-#' @param alternative Character string specifying alternative hypothesis; "two.sided", "less", or "greater" (default "two.sided").
+#' @param grouping Unquoted column name for grouping variable (factor or character).
+#' @param alternative Character string specifying alternative hypothesis; "two.sided", "two",
+#'   "less", or "greater" (default "two.sided"). "two" is accepted as an alias for "two.sided".
 #' @param mu Numeric hypothesized mean difference (default 0).
 #' @param alpha Numeric significance level (default 0.05).
 #' @param variance Character string; "equal" (default) or "unequal" variance assumption.
+#' @param reference Optional character string naming the reference group. Must be quoted and
+#'   match one of the grouping values exactly. See independent_mean_CI for ordering rules.
 #' @return None. Prints formatted test results and conclusion.
 #' @export
 independent_mean_HT <- function(data,
@@ -395,9 +581,17 @@ independent_mean_HT <- function(data,
                                 alternative = "two.sided",
                                 mu = 0,
                                 alpha = 0.05,
-                                variance = "equal") {
+                                variance = "equal",
+                                reference = NULL) {
   grouping_q   <- rlang::enquo(grouping)
   continuous_q <- rlang::enquo(continuous)
+  
+  # Normalize and validate alternative (accept "two" as alias)
+  alt_norm <- tolower(alternative)
+  if (alt_norm == "two") alt_norm <- "two.sided"
+  if (!alt_norm %in% c("two.sided", "less", "greater")) {
+    stop('`alternative` must be one of "two", "two.sided", "less", or "greater".')
+  }
   
   var_equal <- ifelse(variance == "equal", TRUE, FALSE)
   
@@ -408,55 +602,104 @@ independent_mean_HT <- function(data,
   grp_name  <- rlang::quo_name(grouping_q)
   cont_name <- rlang::quo_name(continuous_q)
   
-  # Get actual group names (after NA removal)
-  groups <- unique(df[[grp_name]])
-  if (length(groups) != 2) stop("Grouping variable must have exactly two levels after removing NAs.")
-  group1 <- as.character(groups[1])
-  group2 <- as.character(groups[2])
+  # Ensure exactly two groups present after NA removal
+  groups_present <- unique(df[[grp_name]])
+  groups_chr <- as.character(groups_present)
+  if (length(groups_chr) != 2) {
+    stop("Grouping variable must have exactly two levels after removing NAs.")
+  }
   
+  # Determine order: respect factor levels if provided, otherwise first appearance.
+  if (is.factor(df[[grp_name]])) {
+    orig_levels <- base::levels(df[[grp_name]])
+    levels_order <- orig_levels[orig_levels %in% groups_chr]
+    if (length(levels_order) != 2) {
+      # fallback to appearance order
+      levels_order <- groups_chr
+    }
+  } else {
+    levels_order <- groups_chr
+  }
+  
+  # If reference supplied, validate and set as SECOND level
+  # so the reported difference is (other − reference)
+  if (!is.null(reference)) {
+    if (!is.character(reference) || length(reference) != 1) {
+      stop("`reference` must be a single quoted character string matching a group value.")
+    }
+    if (!(reference %in% levels_order)) {
+      stop(glue::glue("`reference` '{reference}' not found among grouping values: {paste(levels_order, collapse = ', ')}"))
+    }
+    other <- setdiff(levels_order, reference)
+    # other is now g1, reference is g2
+    levels_order <- c(other, reference)
+  }
+  
+  # Relevel grouping to chosen order
+  df[[grp_name]] <- factor(as.character(df[[grp_name]]), levels = levels_order)
+  
+  # Check sample sizes
+  group_counts <- df %>% dplyr::group_by(!!grouping_q) %>% dplyr::summarise(n = dplyr::n(), .groups = "drop")
+  if (any(group_counts$n < 2)) {
+    bad <- group_counts %>% dplyr::filter(n < 2)
+    stop(glue::glue("Each group must have at least 2 non-missing observations. Problem group(s): {paste(bad[[grp_name]], collapse=', ')}"))
+  }
+  
+  # Compute group summaries
+  grp_stats <- df %>%
+    dplyr::group_by(!!grouping_q) %>%
+    dplyr::summarise(
+      n = dplyr::n(),
+      mean = mean(!!continuous_q),
+      sd = stats::sd(!!continuous_q),
+      .groups = "drop"
+    )
+  
+  g1 <- levels_order[1]
+  g2 <- levels_order[2]
+  
+  mean1 <- grp_stats %>% dplyr::filter(!!grouping_q == g1) %>% dplyr::pull(mean)
+  mean2 <- grp_stats %>% dplyr::filter(!!grouping_q == g2) %>% dplyr::pull(mean)
+  
+  # Run the t.test
   fml <- stats::reformulate(termlabels = grp_name, response = cont_name)
-  
-  ttest <- t.test(
+  ttest <- stats::t.test(
     formula    = fml,
     data       = df,
-    alternative= alternative,
+    alternative= alt_norm,
     mu         = mu,
     conf.level = 1 - alpha,
     var.equal  = var_equal
   )
   
-  t_stat  <- round(ttest$statistic, 3)
-  df_val  <- round(as.numeric(ttest$parameter), 2)
-  p_val   <- ttest$p.value
-  est1    <- round(ttest$estimate[1], 4)
-  est2    <- round(ttest$estimate[2], 4)
+  t_stat  <- formatC(round(as.numeric(ttest$statistic), 3), format = "f", digits = 3)
+  df_val  <- formatC(round(as.numeric(ttest$parameter), 2), format = "f", digits = 2)
+  p_val   <- as.numeric(ttest$p.value)
   
-  # Extract group names from ttest object to match estimate order
-  t_names <- names(ttest$estimate)
-  g1 <- sub("mean in group ", "", t_names[1])
-  g2 <- sub("mean in group ", "", t_names[2])
+  # Format means and difference (means -> 2 digits)
+  mean1_f <- formatC(round(mean1, 2), format = "f", digits = 2)
+  mean2_f <- formatC(round(mean2, 2), format = "f", digits = 2)
+  mean_diff <- formatC(round(mean1 - mean2, 2), format = "f", digits = 2)
   
+  # p-value text
   p_text <- if (p_val < 0.001) {
     "p < 0.001"
   } else {
     glue::glue("p = {formatC(round(p_val, 3), format = 'f', digits = 3)}")
   }
   
-  # Print hypotheses with explicit group names
+  # Hypothesis text
   null_text <- switch(
-    alternative,
-    two = glue::glue("H₀: μ[{g1}] − μ[{g2}] = {mu}"),
+    alt_norm,
     two.sided = glue::glue("H₀: μ[{g1}] − μ[{g2}] = {mu}"),
     less = glue::glue("H₀: μ[{g1}] − μ[{g2}] ≥ {mu}"),
     greater = glue::glue("H₀: μ[{g1}] − μ[{g2}] ≤ {mu}")
   )
   alt_text  <- switch(
-    alternative,
-    two = glue::glue("H₁: μ[{g1}] − μ[{g2}] ≠ {mu}"),
+    alt_norm,
     two.sided = glue::glue("H₁: μ[{g1}] − μ[{g2}] ≠ {mu}"),
     less      = glue::glue("H₁: μ[{g1}] − μ[{g2}] < {mu}"),
-    greater   = glue::glue("H₁: μ[{g1}] − μ[{g2}] > {mu}"),
-    stop("`alternative` must be one of \"two\", \"two.sided\", \"less\", \"greater\"")
+    greater   = glue::glue("H₁: μ[{g1}] − μ[{g2}] > {mu}")
   )
   
   test_type <- if (variance == "equal") {
@@ -466,66 +709,132 @@ independent_mean_HT <- function(data,
   }
   
   cat(glue::glue("{test_type}\n\n"))
-  cat(glue::glue("Group means: {g1} = {est1}, {g2} = {est2}\n\n"))
+  cat(glue::glue("The point estimate for the difference in means is x̄[{g1}] − x̄[{g2}] = {mean_diff}\n\n"))
+  cat(glue::glue("Mean of {g1}: {mean1_f}\n\n"))
+  cat(glue::glue("Mean of {g2}: {mean2_f}\n\n"))
   cat(glue::glue("Null: {null_text}\n\n"))
   cat(glue::glue("Alternative: {alt_text}\n\n"))
   cat(glue::glue("Test statistic: t({df_val}) = {t_stat}\n\n"))
   cat(glue::glue("p-value: {p_text}\n\n"))
+  
+  # Keep existing conclusion() call from package
   conclusion(p_val, alpha)
+  
+  invisible(NULL)
 }
 
+
+
+
 #' Paired mean/median summary table
+#'
+#' Produces a simple printed table (not a tibble) summarizing mean (SD) and
+#' median (IQR) for the "before", "after", and their difference (before - after).
 #'
 #' @param data Data frame or tibble.
 #' @param col1 Unquoted column name for "before" values.
 #' @param col2 Unquoted column name for "after" values.
-#' @param accuracy Integer rounding digits for summary statistics (default 1).
-#' @return A tibble summarizing mean (SD) and median (IQR) for before, after, and their differences.
+#' @param accuracy Integer rounding digits for summary statistics (default 3).
+#' @return None — prints a table and returns invisibly NULL.
 #' @importFrom dplyr select
-#' @importFrom tibble tibble
+#' @importFrom tidyr drop_na
 #' @export
 dependent_mean_median <- function(data, col1, col2, accuracy = 3) {
   before_q <- rlang::enquo(col1)
   after_q  <- rlang::enquo(col2)
-
-  df <- data %>% dplyr::select(!!before_q, !!after_q) %>% tidyr::drop_na()
-
-  before_vals <- df %>% dplyr::pull(!!before_q)
-  after_vals  <- df %>% dplyr::pull(!!after_q)
+  
+  # Basic input validation
+  if (!is.numeric(accuracy) || length(accuracy) != 1 || accuracy < 0) {
+    stop("`accuracy` must be a single non-negative integer.")
+  }
+  accuracy <- as.integer(accuracy)
+  
+  # Pull and keep only complete pairs
+  df <- data %>%
+    dplyr::select(!!before_q, !!after_q) %>%
+    tidyr::drop_na()
+  
+  before_name <- rlang::quo_name(before_q)
+  after_name  <- rlang::quo_name(after_q)
+  
+  n_pairs <- nrow(df)
+  
+  if (n_pairs == 0) {
+    stop("No complete pairs available after removing missing values.")
+  }
+  
+  # Helper: prefer a variable 'label' attribute if present, otherwise use the name
+  get_var_label <- function(vec, default_name) {
+    lbl <- attr(vec, "label", exact = TRUE)
+    if (!is.null(lbl) && nzchar(as.character(lbl))) {
+      return(as.character(lbl))
+    }
+    return(default_name)
+  }
+  
+  before_label <- get_var_label(data[[before_name]], before_name)
+  after_label  <- get_var_label(data[[after_name]], after_name)
+  diff_label   <- paste0(before_label, " – ", after_label)
+  
+  before_vals <- df[[before_name]]
+  after_vals  <- df[[after_name]]
   diff_vals   <- before_vals - after_vals
-
-  m_diff   <- mean(diff_vals,    na.rm = TRUE)
-  s_diff   <- sd(diff_vals,      na.rm = TRUE)
-  med_diff <- median(diff_vals,  na.rm = TRUE)
-  iqr_diff <- IQR(diff_vals,     na.rm = TRUE)
-
+  
+  # Compute statistics (na.rm = TRUE not needed after drop_na but kept for safety)
   m1   <- mean(before_vals, na.rm = TRUE)
-  s1   <- sd(before_vals,   na.rm = TRUE)
-  med1 <- median(before_vals, na.rm = TRUE)
-  iqr1 <- IQR(before_vals,    na.rm = TRUE)
-
+  s1   <- stats::sd(before_vals, na.rm = TRUE)
+  med1 <- stats::median(before_vals, na.rm = TRUE)
+  iqr1 <- stats::IQR(before_vals, na.rm = TRUE)
+  
   m2   <- mean(after_vals, na.rm = TRUE)
-  s2   <- sd(after_vals,   na.rm = TRUE)
-  med2 <- median(after_vals, na.rm = TRUE)
-  iqr2 <- IQR(after_vals,    na.rm = TRUE)
-
-  tibble::tibble(
-    Variable       = c(
-      paste0(rlang::as_label(before_q), " – ", rlang::as_label(after_q)),
-      rlang::as_label(before_q),
-      rlang::as_label(after_q)
-    ),
-    `Mean (SD)`    = c(
-      glue::glue("{round(m_diff,  accuracy)} ({round(s_diff,  accuracy)})"),
-      glue::glue("{round(m1,      accuracy)} ({round(s1,      accuracy)})"),
-      glue::glue("{round(m2,      accuracy)} ({round(s2,      accuracy)})")
-    ),
-    `Median (IQR)` = c(
-      glue::glue("{round(med_diff,accuracy)} ({round(iqr_diff,accuracy)})"),
-      glue::glue("{round(med1,    accuracy)} ({round(iqr1,    accuracy)})"),
-      glue::glue("{round(med2,    accuracy)} ({round(iqr2,    accuracy)})")
-    )
+  s2   <- stats::sd(after_vals, na.rm = TRUE)
+  med2 <- stats::median(after_vals, na.rm = TRUE)
+  iqr2 <- stats::IQR(after_vals, na.rm = TRUE)
+  
+  m_diff   <- mean(diff_vals, na.rm = TRUE)
+  s_diff   <- stats::sd(diff_vals, na.rm = TRUE)
+  med_diff <- stats::median(diff_vals, na.rm = TRUE)
+  iqr_diff <- stats::IQR(diff_vals, na.rm = TRUE)
+  
+  # Formatter that preserves NA as "NA" and formats numbers to fixed decimals
+  fmt <- function(x) {
+    if (is.na(x)) return("NA")
+    formatC(round(x, accuracy), format = "f", digits = accuracy)
+  }
+  
+  mean_sd_before <- paste0(fmt(m1), " (", fmt(s1), ")")
+  mean_sd_after  <- paste0(fmt(m2), " (", fmt(s2), ")")
+  mean_sd_diff   <- paste0(fmt(m_diff), " (", fmt(s_diff), ")")
+  
+  med_iqr_before <- paste0(fmt(med1), " (", fmt(iqr1), ")")
+  med_iqr_after  <- paste0(fmt(med2), " (", fmt(iqr2), ")")
+  med_iqr_diff   <- paste0(fmt(med_diff), " (", fmt(iqr_diff), ")")
+  
+  # Build plain data.frame in requested order: before, after, difference
+  out <- data.frame(
+    Variable = c(before_label, after_label, diff_label),
+    `Mean (SD)` = c(mean_sd_before, mean_sd_after, mean_sd_diff),
+    `Median (IQR)` = c(med_iqr_before, med_iqr_after, med_iqr_diff),
+    stringsAsFactors = FALSE
   )
+  
+  # If too few pairs for some statistics, warn but still print the table.
+  if (n_pairs < 2) {
+    warning(
+      sprintf(
+        "Only %d complete pair(s) available. Some statistics (e.g., SD or IQR) require >= 2 observations and may be NA.",
+        n_pairs
+      ),
+      call. = FALSE
+    )
+  }
+  
+  # Print a short heading with the number of complete pairs, then the plain table
+  cat(sprintf("Number of complete pairs: %d\n\n", n_pairs))
+  # Use base print to get the "plain" console-style table
+  print(out, row.names = FALSE)
+  
+  invisible(NULL)
 }
 
 #' Paired mean difference confidence interval
@@ -634,95 +943,6 @@ dependent_mean_HT <- function(data,
   conclusion(p_val, alpha)
 }
 
-#' normality_correlation
-#'
-#' Performs Shapiro-Wilk normality tests and generates Q-Q plots for each numeric variable
-#' in a data frame. Also computes a correlation matrix using the specified method.
-#'
-#' @param data A data frame containing numeric variables.
-#' @param method Correlation method to use; one of \code{"pearson"}, \code{"kendall"}, or \code{"spearman"}.
-#' @param digits_desired Optional integer specifying the number of digits to round numeric output. Default is 5.
-#'
-#' @return A named list with components:
-#' \describe{
-#'   \item{Normality Test}{A data frame with Shapiro-Wilk test statistics and p-values for each numeric variable.}
-#'   \item{Correlation Matrix}{A correlation matrix of numeric variables rounded to the specified digits.}
-#'   \item{QQ Plots}{A \code{ggpubr} arranged plot object containing Q-Q plots of each numeric variable.}
-#' }
-#'
-#' @examples
-#' \dontrun{
-#' normality_correlation(palmerpenguins::penguins, method = "pearson")
-#' normality_correlation(mtcars, method = "kendall")
-#' }
-#'
-#' @import ggplot2
-#' @import ggpubr
-#' @importFrom purrr map map_df
-#' @importFrom dplyr mutate
-#' @export
-normality_correlation <- function(data, method = c("pearson", "kendall", "spearman"), digits_desired = 5) {
-  # Internal helper function to create Q-Q plot for a variable
-  one_qq_plot <- function(data, var_name) {
-    ggplot2::ggplot(data, ggplot2::aes(sample = .data[[var_name]])) +
-      ggplot2::stat_qq() +
-      ggplot2::stat_qq_line() +
-      ggplot2::labs(title = paste("Q-Q Plot:", var_name)) +
-      ggplot2::theme_minimal()
-  }
-
-  # Validate inputs
-  if (!is.data.frame(data)) {
-    stop("`data` must be a data frame.")
-  }
-
-  method <- match.arg(method)
-
-  if (!is.numeric(digits_desired) || digits_desired < 0) {
-    stop("`digits_desired` must be a non-negative numeric value.")
-  }
-
-  # Subset numeric columns only
-  numeric_subset <- data[sapply(data, is.numeric)]
-  numeric_names <- colnames(numeric_subset)
-
-  if (length(numeric_names) == 0) {
-    stop("The data frame contains no numeric variables. Check variable types with `typeof()`.")
-  }
-
-  # Generate Q-Q plots for each numeric variable
-  qq_plots_list <- purrr::map(numeric_names, ~one_qq_plot(numeric_subset, .x))
-
-  # Arrange Q-Q plots in a grid layout
-  cols <- ceiling(sqrt(length(qq_plots_list)))
-  rows <- ceiling(length(qq_plots_list) / cols)
-  qq_plots_out <- ggpubr::ggarrange(plotlist = qq_plots_list, ncol = cols, nrow = rows)
-
-  # Compute correlation matrix with rounding
-  corr_mat <- round(cor(numeric_subset, method = method), digits = digits_desired)
-
-  # Shapiro-Wilk test on each numeric variable, tidy results
-  normality_res <- purrr::map_df(numeric_subset, ~{
-    test <- shapiro.test(.x)
-    data.frame(
-      statistic = unname(test$statistic),
-      p_value = test$p.value
-    )
-  }, .id = "Variable") %>%
-    dplyr::mutate(
-      statistic = round(statistic, digits = digits_desired),
-      p_value = round(p_value, digits = digits_desired)
-    ) %>%
-    dplyr::rename(`Test Statistic` = statistic, `p-value` = p_value)
-
-
-  # Return results as a named list
-  list(
-    "Normality Test" = normality_res,
-    "Correlation Matrix" = corr_mat,
-    "QQ Plots" = qq_plots_out
-  )
-}
 #' Cook's Distance Plot
 #'
 #' Returns a Cook's distance plot for the supplied linear model. Outliers can be labeled,
@@ -871,6 +1091,92 @@ outlier_graph <- function(df, model, x_var, y_var, x_lab = NULL, y_lab = NULL) {
     ggplot2::labs(x = x_lab, y = y_lab, color = "Outlier",
                   title = paste0("There are ", n_suspected, " suspected outliers."))
 }
+
+#' @title Diagnostic Plots: Q-Q Plot and Residuals Histogram
+#' @description Creates a Q-Q plot of standardized residuals and a histogram of residuals for a fitted regression model object
+#'              or directly from data and variables. The plots are displayed side by side.
+#'
+#' @param model Either a fitted regression model object of class \code{lm}, \code{glm}, or \code{aov}, 
+#'              or \code{NULL} if using \code{data}, \code{continuous}, and \code{function_of}.
+#' @param data (Optional) A data frame containing the data.
+#' @param continuous (Optional) The numeric predictor or outcome column in \code{data}.
+#' @param function_of (Optional) The grouping or explanatory column in \code{data}.
+#'
+#' @return A \code{ggpubr} object containing the Q-Q plot and histogram of residuals displayed side by side.
+#'
+#' @examples
+#' \dontrun{
+#' # Using an lm() object
+#' fit <- lm(bill_length_mm ~ bill_depth_mm, data = palmerpenguins::penguins)
+#' qq_hist_plot(fit)
+#'
+#' # Using data, continuous and function_of
+#' qq_hist_plot(data = palmerpenguins::penguins, 
+#'              continuous = bill_length_mm, function_of = bill_depth_mm)
+#' }
+#'
+#' @import ggplot2
+#' @import ggpubr
+#' @export
+
+normality_check <- function(model = NULL, data = NULL, continuous = NULL, function_of = NULL) {
+  # Check for model input or data-driven input
+  if (!is.null(model)) {
+    # Ensure the provided model is valid
+    if (!inherits(model, c("lm", "glm", "aov"))) {
+      stop("The `model` argument must be a regression model of class 'lm', 'glm', or 'aov'.")
+    }
+  } else if (!is.null(data) && !is.null(continuous) && !is.null(function_of)) {
+    # Ensure data-driven inputs are provided correctly
+    outcome_q <- rlang::enquo(continuous)
+    group_q <- rlang::enquo(function_of)
+    
+    # Prepare formula for lm() using data and columns
+    outcome_chr <- rlang::as_name(outcome_q)
+    group_chr <- rlang::as_name(group_q)
+    formula <- as.formula(paste0(outcome_chr, " ~ ", group_chr))
+    model <- lm(formula, data = data)
+  } else {
+    stop("Must provide either a `model` object or `data`, `continuous`, and `function_of`.")
+  }
+  
+  # Extract residuals and standardized residuals
+  res <- residuals(model)
+  stdresid <- rstandard(model)  # Standardized residuals
+  
+  # Create data frame for plotting
+  df <- data.frame(resid = res, stdresid = stdresid)
+  
+  # Q-Q plot of standardized residuals
+  qq_res <- ggplot2::ggplot(df, ggplot2::aes(sample = stdresid)) +
+    ggplot2::stat_qq(color = "#C5C4C4") +
+    ggplot2::stat_qq_line(color = "black", linewidth = 1, linetype = "dashed") +
+    ggplot2::labs(x = "Theoretical Quantiles", y = "Standardized Residuals",
+                  title = "Q-Q Plot of Standardized Residuals") +
+    ggplot2::theme_classic()
+  
+  # Histogram of residuals with normal curve
+  res_his <- ggplot2::ggplot(df, ggplot2::aes(x = resid)) +
+    ggplot2::geom_histogram(aes(y = after_stat(density)),
+                            colour = "black", fill = "#C5C4C4", bins = 30) +
+    ggplot2::stat_function(fun = stats::dnorm,
+                           args = list(mean = mean(res), sd = sd(res)),
+                           color = "black", linewidth = 1) +
+    ggplot2::geom_vline(xintercept = 0, linetype = "dashed",
+                        color = "black", linewidth = 1.5) +
+    ggplot2::labs(x = "Residuals", y = "Density", title = "Histogram of Residuals") +
+    ggplot2::theme_classic() +
+    ggplot2::theme(axis.ticks.y = ggplot2::element_blank(),
+                   axis.text.y = ggplot2::element_blank())
+  
+  # Arrange the plots side by side
+  out <- ggpubr::ggarrange(qq_res, res_his, ncol = 2, labels = c("A", "B"))
+  
+  return(out)
+}
+
+
+
 # Sleek and consistent version of the QQ plot functions for normality assessment
 
 #' one_qq_plot
@@ -1110,10 +1416,19 @@ independent_median_HT <- function(data,
                                   grouping,
                                   alternative = "two.sided",
                                   m = 0,
-                                  alpha = 0.05) {
+                                  alpha = 0.05,
+                                  reference = NULL) {
+  
   # Capture the variables
   grouping_q   <- rlang::enquo(grouping)
   continuous_q <- rlang::enquo(continuous)
+  
+  # Normalize and validate alternative (accept "two" as alias)
+  alt_norm <- tolower(alternative)
+  if (alt_norm == "two") alt_norm <- "two.sided"
+  if (!alt_norm %in% c("two.sided", "less", "greater")) {
+    stop('`alternative` must be one of "two", "two.sided", "less", or "greater".')
+  }
   
   # Prepare the dataset
   df <- data %>%
@@ -1123,60 +1438,122 @@ independent_median_HT <- function(data,
   grp_name  <- rlang::quo_name(grouping_q)
   cont_name <- rlang::quo_name(continuous_q)
   
-  if (is.factor(df[[cont_name]])) {
+  # Force numeric outcome if it's a factor/character
+  if (is.factor(df[[cont_name]]) || is.character(df[[cont_name]])) {
     df[[cont_name]] <- as.numeric(as.character(df[[cont_name]]))
   } else {
     df[[cont_name]] <- as.numeric(df[[cont_name]])
   }
   
-  # Get unique group names in the order they appear
-  groups <- unique(df[[grp_name]])
-  if (length(groups) != 2) stop("Grouping variable must have exactly two levels after removing NAs.")
-  group1 <- as.character(groups[1])
-  group2 <- as.character(groups[2])
+  # Ensure exactly two groups present
+  groups_present <- unique(df[[grp_name]])
+  groups_chr     <- as.character(groups_present)
+  if (length(groups_chr) != 2) {
+    stop("Grouping variable must have exactly two levels after removing NAs.")
+  }
+  
+  # Determine order: respect factor levels if provided, otherwise first appearance
+  if (is.factor(df[[grp_name]])) {
+    orig_levels  <- base::levels(df[[grp_name]])
+    levels_order <- orig_levels[orig_levels %in% groups_chr]
+    if (length(levels_order) != 2) {
+      levels_order <- groups_chr
+    }
+  } else {
+    levels_order <- groups_chr
+  }
+  
+  # If reference supplied, validate and set as SECOND level
+  # so the reported difference is (other − reference), matching independent_mean_HT
+  if (!is.null(reference)) {
+    if (!is.character(reference) || length(reference) != 1) {
+      stop("`reference` must be a single quoted character string matching a group value.")
+    }
+    if (!(reference %in% levels_order)) {
+      stop(glue::glue(
+        "`reference` '{reference}' not found among grouping values: {paste(levels_order, collapse = ', ')}"
+      ))
+    }
+    other <- setdiff(levels_order, reference)
+    levels_order <- c(other, reference)  # non-reference first, reference second
+  }
+  
+  # Relevel grouping to chosen order
+  df[[grp_name]] <- factor(as.character(df[[grp_name]]), levels = levels_order)
+  
+  # Check sample sizes
+  group_counts <- df %>%
+    dplyr::group_by(!!grouping_q) %>%
+    dplyr::summarise(n = dplyr::n(), .groups = "drop")
+  
+  if (any(group_counts$n < 2)) {
+    bad <- group_counts %>% dplyr::filter(n < 2)
+    stop(glue::glue(
+      "Each group must have at least 2 non-missing observations. Problem group(s): {paste(bad[[grp_name]], collapse = ', ')}"
+    ))
+  }
+  
+  g1 <- levels_order[1]
+  g2 <- levels_order[2]
   
   # Create formula
   fml <- stats::reformulate(termlabels = grp_name, response = cont_name)
   
   # Run Wilcoxon Rank Sum test
-  w_test <- wilcox.test(
-    formula = fml,
-    data = df,
-    alternative = alternative,
-    conf.int = TRUE,
+  w_test <- stats::wilcox.test(
+    formula    = fml,
+    data       = df,
+    alternative = alt_norm,
+    conf.int   = TRUE,
     conf.level = 1 - alpha,
-    mu = m,
-    exact = FALSE
+    mu         = m,
+    exact      = FALSE
   )
   
-  w_stat <- round(w_test$statistic, 3)
-  p_val  <- w_test$p.value
+  w_stat <- round(as.numeric(w_test$statistic), 3)
+  p_val  <- as.numeric(w_test$p.value)
   
+  # p-value text
   p_text <- if (p_val < 0.001) {
     "p < 0.001"
   } else {
     glue::glue("p = {formatC(round(p_val, 3), format = 'f', digits = 3)}")
   }
   
-  # Use helpers for symbols
-  null_sym <- null_symbol(alternative)
-  alt_sym  <- alt_symbol(alternative)
+  # Hypothesis text
+  null_text <- switch(
+    alt_norm,
+    two.sided = glue::glue("H₀: M[{g1}] − M[{g2}] = {m}"),
+    less = glue::glue("H₀: M[{g1}] − M[{g2}] ≥ {m}"),
+    greater = glue::glue("H₀: M[{g1}] − M[{g2}] ≤ {m}")
+  )
+  alt_text  <- switch(
+    alt_norm,
+    two.sided = glue::glue("H₁: M[{g1}] − M[{g2}] ≠ {m}"),
+    less      = glue::glue("H₁: M[{g1}] − M[{g2}] < {m}"),
+    greater   = glue::glue("H₁: M[{g1}] − M[{g2}] > {m}")
+  )
   
-  null_text <- glue::glue("H₀: M[{group1}] − M[{group2}] {null_sym} {m}")
-  alt_text  <- glue::glue("H₁: M[{group1}] − M[{group2}] {alt_sym} {m}")
+  # Group medians and sample median difference
+  med1 <- stats::median(df[df[[grp_name]] == g1, ][[cont_name]], na.rm = TRUE)
+  med2 <- stats::median(df[df[[grp_name]] == g2, ][[cont_name]], na.rm = TRUE)
   
-  # Calculate and print group medians
-  med1 <- round(median(df[df[[grp_name]] == group1, ][[cont_name]]), 4)
-  med2 <- round(median(df[df[[grp_name]] == group2, ][[cont_name]]), 4)
+  med1_f <- formatC(round(med1, 4), format = "f", digits = 4)
+  med2_f <- formatC(round(med2, 4), format = "f", digits = 4)
+  med_diff <- formatC(round(med1 - med2, 4), format = "f", digits = 4)
   
-  cat(glue::glue("Wilcoxon Rank Sum Test for two independent medians\n\n"))
-  cat(glue::glue("Group medians: {group1} = {med1}, {group2} = {med2}\n\n"))
+  cat(glue::glue("Wilcoxon Rank Sum Test for two independent medians (M[{g1}] − M[{g2}]):\n\n"))
+  cat(glue::glue("Sample median difference: M[{g1}] − M[{g2}] = {med_diff}\n\n"))
+  cat(glue::glue("Median of {g1}: {med1_f}\n\n"))
+  cat(glue::glue("Median of {g2}: {med2_f}\n\n"))
   cat(glue::glue("Null: {null_text}\n\n"))
   cat(glue::glue("Alternative: {alt_text}\n\n"))
   cat(glue::glue("Test statistic: T = {w_stat}\n\n"))
   cat(glue::glue("p-value: {p_text}\n\n"))
   
   conclusion(p_val, alpha)
+  
+  invisible(NULL)
 }
 
 #' Paired median difference hypothesis test
@@ -1294,7 +1671,7 @@ one_way_ANOVA <- function(data,
   p_text <- if (p_val < 0.001) "p < 0.001" else glue::glue("p = {formatC(round(p_val, 3), format = 'f', digits = 3)}")
   
   # Output
-  cat("One-Way ANOVA: \n")
+  cat("One-Way ANOVA: \n\n")
   cat(glue::glue("H₀: {mu_expr}\n\n"))
   cat(glue::glue("H₁: At least one group mean is different\n\n"))
   cat(glue::glue("Test Statistic: F({df1}, {df2}) = {f_stat}\n\n"))
@@ -2307,10 +2684,10 @@ two_prop_CI <- function(data, binary, grouping, event, confidence = 0.95) {
   ci_upper <- test$conf.int[2]
   
   # Print results in a clear style
-  cat(glue::glue("Sample proportion ({group1}): {round(p1, 4)}\n"))
-  cat(glue::glue("Sample proportion ({group2}): {round(p2, 4)}\n"))
-  cat(glue::glue("Point estimate for the difference in proportions (p̂[{group1}] − p̂[{group2}]): {round(diff, 4)}\n"))
-  cat(glue::glue("{conf_percent}% confidence interval for p[{group1}] − p[{group2}]: ({round(ci_lower, 4)}, {round(ci_upper, 4)})\n"))
+  cat(glue::glue("Sample proportion ({group1}): {round(p1, 4)}\n\n"))
+  cat(glue::glue("Sample proportion ({group2}): {round(p2, 4)}\n\n"))
+  cat(glue::glue("Point estimate for the difference in proportions (p̂[{group1}] − p̂[{group2}]): {round(diff, 4)}\n\n"))
+  cat(glue::glue("{conf_percent}% confidence interval for π[{group1}] − π[{group2}]: ({round(ci_lower, 4)}, {round(ci_upper, 4)})\n\n"))
 }
 
 
@@ -2391,12 +2768,10 @@ two_prop_HT <- function(data, binary, grouping, event, p = 0, alternative = "two
   null_sym <- null_symbol(alternative)
   alt_sym  <- alt_symbol(alternative)
   
-  cat(glue("Two-sample z-test for difference in proportions:\n\n"))
-  cat(glue("Group 1: {group1}\n"))
-  cat(glue("  Sample proportion = {round(p1, 4)} ({x1}/{n1})\n"))
-  cat(glue("Group 2: {group2}\n"))
-  cat(glue("  Sample proportion = {round(p2, 4)} ({x2}/{n2})\n\n"))
-  cat(glue("Point estimate for the difference: p̂[{group1}] − p̂[{group2}] = {round(phat_diff, 4)}\n\n"))
+  cat(glue("Two-sample z-test for difference in proportions:\n\n\n"))
+  cat(glue("p̂[{group1} = {round(p1, 4)} ({x1}/{n1})\n\n"))
+  cat(glue("p̂[{group2} = {round(p2, 4)} ({x2}/{n2})\n\n"))
+  cat(glue("p̂[{group1}] − p̂[{group2}] = {round(phat_diff, 4)}\n\n\n"))
   cat(glue("Null: H₀: π[{group1}] − π[{group2}] {null_sym} {p}\n\n"))
   cat(glue("Alternative: H₁: π[{group1}] − π[{group2}] {alt_sym} {p}\n\n"))
   cat(glue("Test statistic: z = {z_stat}\n\n"))

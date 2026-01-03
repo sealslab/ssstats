@@ -10,7 +10,8 @@ independent_median_HT(
   grouping,
   alternative = "two.sided",
   m = 0,
-  alpha = 0.05
+  alpha = 0.05,
+  reference = NULL
 )
 }
 \arguments{

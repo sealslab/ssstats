@@ -4,7 +4,16 @@
 \alias{n_pct}
 \title{Compute Counts and Percentages for One- or Two-Way Tables}
 \usage{
-n_pct(data, row_var, col_var = NULL, rows = 3, digits = 1, denom = "col")
+n_pct(
+  data,
+  row_var,
+  col_var = NULL,
+  rows = NULL,
+  digits = 1,
+  denom = "col",
+  default_rows = 10,
+  require_rows_if_truncated = TRUE
+)
 }
 \arguments{
 \item{data}{A data frame or tibble.}

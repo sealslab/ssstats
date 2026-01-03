@@ -11,7 +11,8 @@ independent_mean_HT(
   alternative = "two.sided",
   mu = 0,
   alpha = 0.05,
-  variance = "equal"
+  variance = "equal",
+  reference = NULL
 )
 }
 \arguments{
@@ -19,15 +20,19 @@ independent_mean_HT(
 
 \item{continuous}{Unquoted column name for continuous outcome.}
 
-\item{grouping}{Unquoted column name for grouping variable (factor).}
+\item{grouping}{Unquoted column name for grouping variable (factor or character).}
 
-\item{alternative}{Character string specifying alternative hypothesis; "two.sided", "less", or "greater" (default "two.sided").}
+\item{alternative}{Character string specifying alternative hypothesis; "two.sided", "two",
+"less", or "greater" (default "two.sided"). "two" is accepted as an alias for "two.sided".}
 
 \item{mu}{Numeric hypothesized mean difference (default 0).}
 
 \item{alpha}{Numeric significance level (default 0.05).}
 
 \item{variance}{Character string; "equal" (default) or "unequal" variance assumption.}
+
+\item{reference}{Optional character string naming the reference group. Must be quoted and
+match one of the grouping values exactly. See independent_mean_CI for ordering rules.}
 }
 \value{
 None. Prints formatted test results and conclusion.
