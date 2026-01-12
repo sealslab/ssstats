@@ -2598,29 +2598,57 @@ significant_line <- function(data, outcome, function_of, family = gaussian(), al
 
 #' Adjusted R-squared for Multiple Regression
 #'
-#' Calculates the adjusted R-squared value for a multiple linear regression model.
+#' Calculates the adjusted R-squared value for linear regression models (`lm`) and extracts
+#' an adjusted R-squared equivalent for generalized linear models (`glm`) by re-fitting with `lm`.
 #'
-#' @param data A data frame or tibble.
-#' @param outcome Unquoted outcome variable (e.g., y).
-#' @param function_of Unquoted predictors (e.g., x1 + x2).
+#' @param model Either a fitted model object of class \code{lm}, \code{glm}, or \code{aov},
+#'              or \code{NULL} if using \code{data}, \code{outcome}, and \code{function_of}.
+#' @param data (Optional) A data frame or tibble, required if not using a fitted model.
+#' @param outcome (Optional) Unquoted outcome variable (e.g., y), required if not using a fitted model.
+#' @param function_of (Optional) Unquoted predictors (e.g., x1 + x2), required if not using a fitted model.
 #'
 #' @return A numeric value: the adjusted R-squared.
 #' @export
-r_squared <- function(data, outcome, function_of) {
-  # Capture inputs
-  y <- rlang::as_name(rlang::enquo(outcome))
-  rhs_expr <- rlang::enquo(function_of)
+
+r_squared <- function(model = NULL, data = NULL, outcome = NULL, function_of = NULL) {
+  # Check for model input or data-driven input
+  if (!is.null(model)) {
+    # Ensure the provided model is valid
+    if (!inherits(model, c("lm", "glm", "aov"))) {
+      stop("The `model` argument must be a regression model of class 'lm', 'glm', or 'aov'.")
+    }
+    
+    # Deal with glm objects by refitting as lm, if necessary
+    if (inherits(model, "glm")) {
+      # Ensure the glm has an `identity` link function
+      if (model$family$link != "identity") {
+        stop("This function only supports glm objects with an identity link (i.e., equivalent to lm).")
+      }
+      
+      # Refit glm as lm: Extract data and formula from the glm object
+      model <- lm(formula(model), data = model$model)
+    }
+  } else if (!is.null(data) && !is.null(outcome) && !is.null(function_of)) {
+    # If no model, construct a formula from `outcome` and `function_of`
+    y <- rlang::as_name(rlang::enquo(outcome))
+    rhs_expr <- rlang::enquo(function_of)
+    
+    # Parse the RHS expression into a character vector of variables
+    rhs_vars <- all.vars(rhs_expr)
+    
+    # Construct the formula
+    f <- reformulate(rhs_vars, response = y)
+    
+    # Fit the model
+    model <- lm(f, data = data)
+  } else {
+    stop("You must provide either a `model` object or `data`, `outcome`, and `function_of`.")
+  }
   
-  # Parse the RHS expression into a character vector of variables
-  rhs_vars <- all.vars(rhs_expr)
-  
-  # Construct the formula
-  f <- reformulate(rhs_vars, response = y)
-  
-  # Fit model and extract adjusted R-squared
-  model <- lm(f, data = data)
-  round(summary(model)$adj.r.squared,4)
+  # Calculate and return the adjusted R-squared value
+  round(summary(model)$adj.r.squared, 4)
 }
+
 
 
 #' Two-Sample Proportion Confidence Interval

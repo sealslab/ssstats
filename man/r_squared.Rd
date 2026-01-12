@@ -4,18 +4,22 @@
 \alias{r_squared}
 \title{Adjusted R-squared for Multiple Regression}
 \usage{
-r_squared(data, outcome, function_of)
+r_squared(model = NULL, data = NULL, outcome = NULL, function_of = NULL)
 }
 \arguments{
-\item{data}{A data frame or tibble.}
+\item{model}{Either a fitted model object of class \code{lm}, \code{glm}, or \code{aov},
+or \code{NULL} if using \code{data}, \code{outcome}, and \code{function_of}.}
 
-\item{outcome}{Unquoted outcome variable (e.g., y).}
+\item{data}{(Optional) A data frame or tibble, required if not using a fitted model.}
 
-\item{function_of}{Unquoted predictors (e.g., x1 + x2).}
+\item{outcome}{(Optional) Unquoted outcome variable (e.g., y), required if not using a fitted model.}
+
+\item{function_of}{(Optional) Unquoted predictors (e.g., x1 + x2), required if not using a fitted model.}
 }
 \value{
 A numeric value: the adjusted R-squared.
 }
 \description{
-Calculates the adjusted R-squared value for a multiple linear regression model.
+Calculates the adjusted R-squared value for linear regression models (`lm`) and extracts
+an adjusted R-squared equivalent for generalized linear models (`glm`) by re-fitting with `lm`.
 }
