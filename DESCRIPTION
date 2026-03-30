@@ -1,7 +1,7 @@
 Package: ssstats
 Type: Package
 Title: Introductory Biostatistics Functions for Students Using R
-Version: 0.1.0
+Version: 0.2.0
 Authors@R: 
   c(
     person(given = "Ihsan",
@@ -16,13 +16,12 @@ Authors@R:
 Description: This package helps students get acclimated to R programming in introductory biostatistics courses by combining commonly used statistical tasks and duties into easy-to-use functions.
 License: MIT + file LICENSE
 Encoding: UTF-8
-Imports: broom, car, dplyr, FSA, ggplot2, ggpubr, glue, gt, janitor,
-        MASS, magrittr, palmerpenguins, patchwork, purrr, rlang,
-        scales, tibble, tidyr
-Suggests: knitr, rmarkdown, tidyverse
+Imports: broom, dplyr, ggplot2, ggpubr, glue, gt, janitor, magrittr,
+        patchwork, purrr, rlang, scales, tibble, tidyr, tidyselect
+Suggests: dunn.test, knitr, palmerpenguins, rmarkdown, tidyverse
 VignetteBuilder: knitr
 RoxygenNote: 7.3.3
 NeedsCompilation: no
 Packaged: 2025-07-22 03:26:10 UTC; ihsanbuker
 Author: Ihsan Buker [aut, cre], Samantha Seals [aut]
-Maintainer: Ihsan Buker <iebuker@uab.edu>
+Maintainer: Samantha Seals <sseals@uwf.edu>

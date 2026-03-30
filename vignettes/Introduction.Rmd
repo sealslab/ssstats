@@ -1,8 +1,8 @@
 ---
-title: "Introduction"
+title: "Introduction to ssstats"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Introduction}
+  %\VignetteIndexEntry{Introduction to ssstats}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -11,16 +11,432 @@ vignette: >
 knitr::opts_chunk$set(
   warning = FALSE,
   message = FALSE,
-  fig.align = "center",     
-  fig.width = 6,            
-  fig.height = 4            
+  fig.align = "center",
+  fig.width = 6,
+  fig.height = 4
 )
 ```
 
-This vignette demonstrates how to use functions from the `ssstats` package to carry out common statistical tasks in R. To follow along, load the required packages:
+The `ssstats` package provides a consistent set of functions for applied statistics courses at the University of West Florida. Every function follows the same conventions: pass a data frame, specify variable names without quotes, and receive formatted output that walks through hypotheses, test statistics, and conclusions.
+
+To follow along, load the required packages:
 
 ```{r}
 library(tidyverse)
 library(ssstats)
 library(palmerpenguins)
+```
+
+All examples in this vignette use the `penguins` dataset from `palmerpenguins`, which contains measurements for 344 penguins across three species.
+
+```{r}
+penguins <- penguins
+head(penguins)
+```
+
+---
+
+## Descriptive Statistics
+
+### Means and Medians
+
+`mean_median()` produces a summary of mean (SD) and median (IQR) for one or more numeric variables.
+
+```{r}
+mean_median(penguins, bill_length_mm, bill_depth_mm, flipper_length_mm, body_mass_g)
+```
+
+### Frequency Tables
+
+`n_pct()` produces a one- or two-way frequency table with counts and column percentages.
+
+```{r}
+# One-way table
+n_pct(penguins, species)
+```
+
+```{r}
+# Two-way table
+n_pct(penguins, species, island)
+```
+
+### Descriptive Statistics Table
+
+`table_one()` creates a publication-style descriptive statistics table. Continuous variables are summarized as mean (SD) or median (IQR); categorical variables show counts and column percentages. Use `split_var` to stratify by a grouping variable.
+
+```{r}
+table_one(
+  penguins,
+  cont_vars = c(bill_length_mm, bill_depth_mm, flipper_length_mm, body_mass_g),
+  cat_vars  = c(species, island),
+  split_var = sex
+)
+```
+
+---
+
+## One-Sample Procedures
+
+### Checking Normality
+
+Before running a one-sample t-test, use `one_qq_plot()` to assess whether the data are approximately normally distributed.
+
+```{r}
+one_qq_plot(penguins, bill_length_mm)
+```
+
+### One-Sample Mean (t-test)
+
+`one_mean()` tests whether the population mean equals a hypothesized value using a one-sample t-test.
+
+```{r}
+one_mean(penguins, bill_length_mm, mu = 43)
+```
+
+### One-Sample Proportion (z-test)
+
+`one_proportion()` tests a single proportion using a z-test with a Wald confidence interval. Specify the `event` value that counts as a success.
+
+```{r}
+one_proportion(penguins, sex, event = "male", p = 0.5)
+```
+
+### One-Sample Variance (chi-squared test)
+
+`one_variance()` tests whether the population variance equals a hypothesized value using a chi-squared test.
+
+```{r}
+one_variance(penguins, bill_length_mm, sigma2 = 25)
+```
+
+---
+
+## Two-Sample Independent Procedures
+
+The examples in this section compare Adelie and Chinstrap penguins, filtering out the third species.
+
+```{r}
+ac_penguins <- penguins |> filter(species != "Gentoo")
+```
+
+### Checking Normality by Group
+
+`independent_qq()` produces QQ plots and histograms for each group, useful for assessing the normality assumption before running an independent-samples t-test.
+
+```{r fig.height=5}
+independent_qq(ac_penguins, bill_length_mm, species)
+```
+
+### Two-Sample Means (Welch's t-test)
+
+`independent_means()` compares means from two independent groups using Welch's t-test (unequal variances assumed). Use `first` to control which group is subtracted from.
+
+```{r}
+independent_means(ac_penguins, bill_length_mm, species, first = "Chinstrap")
+```
+
+### Two-Sample Variances (F-test)
+
+`two_variances()` tests the equality of variances between two groups.
+
+```{r}
+two_variances(ac_penguins, bill_length_mm, species)
+```
+
+### Two-Sample Medians (Wilcoxon Rank Sum Test)
+
+`independent_medians()` provides a non-parametric alternative based on the Wilcoxon rank sum test, reporting the Hodges-Lehmann estimate of the location shift.
+
+```{r}
+independent_medians(ac_penguins, bill_length_mm, species, first = "Chinstrap")
+```
+
+### Two-Sample Proportions (z-test)
+
+`independent_proportions()` compares proportions between two groups. Here we test whether the proportion of female penguins differs between Adelie and Chinstrap.
+
+```{r}
+ac_penguins |>
+  filter(!is.na(sex)) |>
+  independent_proportions(sex, species, event = "female", first = "Chinstrap")
+```
+
+---
+
+## Paired (Dependent) Procedures
+
+### Checking Normality of Differences
+
+`dependent_qq()` produces a QQ plot and histogram of the paired differences to assess normality.
+
+```{r fig.height=5}
+dependent_qq(penguins, bill_length_mm, bill_depth_mm)
+```
+
+### Paired Means (Paired t-test)
+
+`dependent_means()` tests the mean of paired differences using a paired t-test.
+
+```{r}
+dependent_means(penguins, bill_length_mm, bill_depth_mm)
+```
+
+### Paired Medians (Wilcoxon Signed-Rank Test)
+
+`dependent_medians()` provides a non-parametric alternative using the Wilcoxon signed-rank test.
+
+```{r}
+dependent_medians(penguins, bill_length_mm, bill_depth_mm)
+```
+
+### Paired Proportions (McNemar's Test)
+
+`dependent_proportions()` tests paired binary outcomes using McNemar's test. It automatically uses the normal approximation when there are 25 or more discordant pairs, and an exact binomial test otherwise.
+
+The following example uses a small before/after survey dataset:
+
+```{r}
+survey <- tibble(
+  pre  = c("yes","yes","no","yes","no","no","yes","no","yes","yes",
+           "no","yes","no","no","yes","yes","no","yes","no","no"),
+  post = c("yes","no","no","yes","yes","no","yes","yes","yes","no",
+           "yes","yes","no","no","yes","yes","yes","no","no","yes")
+)
+
+dependent_proportions(survey, pre, post, event = "yes")
+```
+
+---
+
+## Multiple-Group Procedures
+
+### Checking ANOVA Assumptions
+
+Before running an ANOVA, use `anova_check()` to examine residuals for normality (QQ plots faceted by group) and equal variance.
+
+```{r fig.height=5}
+anova_check(penguins, bill_length_mm, species)
+```
+
+### One-Way ANOVA
+
+`anovas()` fits and summarizes a one-way ANOVA when only factor `A` is provided.
+
+```{r}
+anovas(penguins, bill_length_mm, species)
+```
+
+### Post-Hoc Comparisons
+
+After a significant ANOVA, use `posthoc_test()` to identify which group pairs differ. By default it applies Tukey's HSD adjustment; set `adjust = FALSE` for Fisher's LSD.
+
+```{r}
+posthoc_test(penguins, bill_length_mm, A = species)
+```
+
+### Simultaneous Confidence Intervals
+
+`simultaneous_ci()` constructs Bonferroni-corrected confidence intervals for a parameter (mean, median, variance, SD, or proportion) across all groups.
+
+```{r}
+simultaneous_ci(penguins, bill_length_mm, species)
+```
+
+### Two-Way ANOVA
+
+Pass a second factor `B` to `anovas()` to fit a two-way ANOVA. Set `interaction = TRUE` (default) to include the interaction term.
+
+```{r}
+penguins |>
+  filter(!is.na(sex)) |>
+  anovas(bill_length_mm, species, sex, interaction = TRUE)
+```
+
+Use `profile_plot()` to visualize potential interactions before (or alongside) a two-way ANOVA:
+
+```{r}
+penguins |>
+  filter(!is.na(sex)) |>
+  profile_plot(bill_length_mm, xaxis = species, lines = sex)
+```
+
+### Kruskal-Wallis Test
+
+`kruskal_wallis()` provides a non-parametric alternative to one-way ANOVA when normality is not tenable.
+
+```{r}
+kruskal_wallis(penguins, bill_length_mm, species)
+```
+
+For post-hoc comparisons after Kruskal-Wallis, set `nonparametric = TRUE` in `posthoc_test()`:
+
+```{r}
+posthoc_test(penguins, bill_length_mm, A = species, nonparametric = TRUE)
+```
+
+### Brown-Forsythe-Levene Test
+
+`multiple_variances()` tests the equality of variances across three or more groups using the median-based Brown-Forsythe-Levene test.
+
+```{r}
+multiple_variances(penguins, bill_length_mm, species)
+```
+
+---
+
+## Categorical Data Analysis
+
+### Chi-Square Goodness-of-Fit
+
+`goodness_of_fit()` tests whether observed category frequencies match a specified distribution. If `expected` is `NULL`, equal proportions are assumed.
+
+```{r}
+goodness_of_fit(penguins, species)
+```
+
+To test against a non-uniform distribution, supply a named vector of expected proportions:
+
+```{r}
+goodness_of_fit(
+  penguins,
+  species,
+  expected = c(Adelie = 0.50, Chinstrap = 0.25, Gentoo = 0.25)
+)
+```
+
+### Chi-Square Test of Independence
+
+`independence()` tests whether two categorical variables are associated.
+
+```{r}
+independence(penguins, species, island)
+```
+
+---
+
+## Correlation
+
+### Checking Bivariate Normality
+
+`correlation_qq()` produces side-by-side QQ plots for two variables to help assess whether the normality assumption for Pearson's correlation is plausible.
+
+```{r}
+correlation_qq(penguins, bill_length_mm, body_mass_g)
+```
+
+### Pearson and Spearman Correlation
+
+`correlation()` computes Pearson (default) or Spearman correlation. Provide both `x` and `y` for a single pair, or omit them for all pairwise correlations.
+
+```{r}
+# Single pair — Pearson
+correlation(penguins, bill_length_mm, body_mass_g)
+```
+
+```{r}
+# Single pair — Spearman
+correlation(penguins, bill_length_mm, body_mass_g, method = "spearman")
+```
+
+```{r}
+# All numeric pairs
+penguins |>
+  select(bill_length_mm, bill_depth_mm, flipper_length_mm, body_mass_g) |>
+  correlation()
+```
+
+---
+
+## Regression
+
+### Is the Line Significant? (Likelihood Ratio Test)
+
+`significant_line()` tests the overall significance of a regression model via a likelihood ratio test comparing the fitted model to an intercept-only null model.
+
+```{r}
+significant_line(penguins, body_mass_g, bill_length_mm)
+```
+
+### Linear Regression Table
+
+`linear_regression()` fits a linear model and returns a formatted table of coefficients, 95% confidence intervals, and p-values.
+
+```{r}
+linear_regression(penguins, body_mass_g, bill_length_mm)
+```
+
+For multiple predictors, pass an expression to `function_of`:
+
+```{r}
+linear_regression(penguins, body_mass_g, bill_length_mm + species)
+```
+
+### Adjusted R²
+
+`r_squared()` returns the adjusted R² for a fitted model or from raw data.
+
+```{r}
+r_squared(data = penguins, outcome = body_mass_g, function_of = bill_length_mm + species)
+```
+
+### Comparing Models Side by Side
+
+`glm_table()` accepts multiple fitted model objects and produces a single comparison table.
+
+```{r}
+m1 <- lm(body_mass_g ~ bill_length_mm, data = penguins)
+m2 <- lm(body_mass_g ~ bill_length_mm + species, data = penguins)
+
+glm_table(m1, m2, model_names = c("Simple", "With Species"))
+```
+
+### Checking Regression Assumptions
+
+`reg_check()` produces three diagnostic plots: a QQ plot of residuals, a histogram of residuals, and a residuals vs. fitted values plot. It accepts either a fitted model object or raw data with column names.
+
+```{r fig.height=5}
+reg_check(m2)
+```
+
+`normality_check()` and `variance_check()` isolate the individual components if you prefer to view them separately:
+
+```{r}
+normality_check(m2)
+```
+
+```{r}
+variance_check(m2)
+```
+
+### Cook's Distance
+
+`cooks()` plots Cook's distance for each observation and flags those that exceed a threshold. The default `"convention"` threshold uses $4/n$ as a low threshold and 1 as a high threshold.
+
+```{r}
+cooks(m2)
+```
+
+### Outlier Detection
+
+`outlier_count()` tabulates how many observations have absolute standardized residuals above 2.5 (suspected outliers).
+
+```{r}
+outlier_count(m2)
+```
+
+`outlier_graph()` produces a scatter plot colored by outlier status:
+
+```{r}
+outlier_graph(penguins, m1, bill_length_mm, body_mass_g)
+```
+
+### Logistic Regression
+
+`logistic_regression()` fits a logistic regression model and returns a table of log-odds coefficients, confidence intervals, and p-values. The outcome variable should be coded as 0/1 (or a factor with two levels).
+
+```{r}
+penguins |>
+  filter(!is.na(sex)) |>
+  mutate(male = as.integer(sex == "male")) |>
+  logistic_regression(male, bill_length_mm + bill_depth_mm)
 ```
