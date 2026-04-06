@@ -5,8 +5,8 @@
 #'   to `show`, a message is emitted.
 #'
 #' @param data A data frame or tibble.
-#' @param row_var Unquoted column name for the row variable.
-#' @param col_var Unquoted column name for the column variable. If `NULL`
+#' @param row Unquoted column name for the row variable.
+#' @param col Unquoted column name for the column variable. If `NULL`
 #'   (default), a one-way table is returned.
 #' @param show Maximum number of rows to return (or show). Defaults to 
 #'   `10`. Set to `Inf` to return all rows.

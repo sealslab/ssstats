@@ -11,7 +11,7 @@
 #' @param A Unquoted column name for factor A (the grouping variable in a
 #'   one-way ANOVA, or the first factor in a two-way ANOVA).
 #' @param B Unquoted column name for the second factor in a two-way ANOVA.
-#'   Omit (or leave as `NULL`) for a one-way ANOVA.
+#'   Omit for a one-way ANOVA.
 #' @param interaction Logical. Only relevant when `B` is specified. If `TRUE`
 #'   (default), fits the model `outcome ~ A * B` (main effects plus
 #'   interaction). If `FALSE`, fits `outcome ~ A + B` (main effects only).

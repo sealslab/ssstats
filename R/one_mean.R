@@ -7,7 +7,7 @@
 #'
 #' @param data A data frame or tibble.
 #' @param outcome Unquoted column name for the continuous outcome (numeric).
-#' @param mu Numeric. Hypothesised mean under the null.
+#' @param mu Numeric. Hypothesized mean under the null (default = 0).
 #' @param alternative Character string specifying the alternative hypothesis.
 #'   One of `"two.sided"` (default), `"two"`, `"less"`, or `"greater"`. The
 #'   confidence interval is always two-sided regardless of this setting.
@@ -24,7 +24,7 @@
 #' @importFrom glue glue
 one_mean <- function(data,
                      outcome,
-                     mu,
+                     mu          = 0,
                      alternative = "two.sided",
                      alpha       = 0.05) {
 

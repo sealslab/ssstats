@@ -42,7 +42,7 @@
 #' @importFrom stats qchisq prop.test
 simultaneous_ci <- function(data,
                              outcome,
-                             group,
+                             grouping,
                              parameter = "mean",
                              alpha     = 0.05) {
 
@@ -91,10 +91,10 @@ simultaneous_ci <- function(data,
   }
 
   # ── Numeric parameters: group required, one row per group ───────────────────
-  group_q <- rlang::enquo(group)
+  group_q <- rlang::enquo(grouping)
 
   if (rlang::quo_is_missing(group_q))
-    stop('`group` is required when parameter is not "proportion".', call. = FALSE)
+    stop('`grouping` is required when parameter is not "proportion".', call. = FALSE)
 
   y <- dplyr::pull(data, !!outcome_q)
   g <- dplyr::pull(data, !!group_q)

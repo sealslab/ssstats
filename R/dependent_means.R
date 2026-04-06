@@ -12,8 +12,7 @@
 #' @param alternative Character string specifying the alternative hypothesis.
 #'   One of `"two.sided"` (default), `"two"`, `"less"`, or `"greater"`. The
 #'   confidence interval is always two-sided regardless of this setting.
-#' @param mu Numeric. Hypothesised mean difference under the null. Defaults
-#'   to `0`.
+#' @param mu Numeric. Hypothesized mean difference under the null (default = 0).
 #' @param alpha Numeric. Significance level between 0 and 1 (exclusive).
 #'   Defaults to `0.05`. The confidence interval is computed at
 #'   \code{(1 - alpha) * 100\%}.
@@ -29,8 +28,8 @@ dependent_means <- function(data,
                             col1,
                             col2,
                             alternative = "two.sided",
-                            mu = 0,
-                            alpha = 0.05) {
+                            mu          = 0,
+                            alpha       = 0.05) {
 
   alternative <- match.arg(alternative, choices = c("two.sided", "two", "less", "greater"))
   if (alternative == "two") alternative <- "two.sided"

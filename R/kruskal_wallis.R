@@ -12,7 +12,7 @@
 #'
 #' @param data A data frame or tibble.
 #' @param outcome Unquoted column name for the continuous outcome (numeric).
-#' @param group Unquoted column name for the grouping variable. Must have at
+#' @param A Unquoted column name for the grouping variable. Must have at
 #'   least 2 levels.
 #' @param alpha Numeric. Significance level between 0 and 1 (exclusive).
 #'   Defaults to `0.05`.

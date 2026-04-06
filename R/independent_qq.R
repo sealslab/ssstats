@@ -4,7 +4,7 @@
 #'   independent samples analysis, for assessing the normality assumption.
 #'
 #' @param data A data frame or tibble.
-#' @param continuous Unquoted column name for the continuous outcome (numeric).
+#' @param outcome Unquoted column name for the continuous outcome (numeric).
 #' @param grouping Unquoted column name for the grouping variable. Must have
 #'   exactly two levels.
 #'
@@ -17,9 +17,9 @@
 #' @importFrom ggplot2 ggplot aes stat_qq_line stat_qq theme_bw labs geom_histogram
 #' @importFrom ggpubr ggarrange
 #' @importFrom magrittr %>%
-independent_qq <- function(data, continuous, grouping) {
+independent_qq <- function(data, outcome, grouping) {
   # Capture variables using tidy evaluation
-  variable_q <- rlang::enquo(continuous)
+  variable_q <- rlang::enquo(outcome)
   group_q    <- rlang::enquo(grouping)
   
   # Extract column names as characters for later labeling

@@ -5,15 +5,15 @@
 #'   quantiles with a dashed reference line.
 #'
 #' @param data A dataframe or tibble.
-#' @param variable Unquoted column name for the numeric variable to plot.
+#' @param outcome Unquoted column name for the numeric variable to plot.
 #'
 #' @return A \code{ggplot} object.
 #'
 #' @export
 #' @importFrom ggplot2 ggplot aes stat_qq stat_qq_line theme_bw labs
 #' @importFrom rlang enquo as_name `!!`
-one_qq_plot <- function(data, variable) {
-  var_q   <- rlang::enquo(variable)
+one_qq <- function(data, outcome) {
+  var_q   <- rlang::enquo(outcome)
   var_chr <- rlang::as_name(var_q)
 
   ggplot2::ggplot(data, ggplot2::aes(sample = !!var_q)) +

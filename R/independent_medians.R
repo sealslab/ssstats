@@ -11,13 +11,12 @@
 #'
 #' @param data A data frame or tibble.
 #' @param outcome Unquoted column name for the continuous outcome (numeric).
-#' @param group Unquoted column name for the grouping variable. Must have
+#' @param grouping Unquoted column name for the grouping variable. Must have
 #'   exactly two levels.
 #' @param first Character string. The group level to treat as the first term
 #'   in the subtraction (i.e., group1 in M[group1] - M[group2]). Defaults to
 #'   `NULL`, in which case groups are ordered alphabetically.
-#' @param m Numeric. Hypothesised median difference under the null. Defaults
-#'   to `0`.
+#' @param m Numeric. Hypothesized median difference under the null (default = 0).
 #' @param alternative Character string specifying the alternative hypothesis.
 #'   One of `"two.sided"` (default), `"two"`, `"less"`, or `"greater"`. The
 #'   confidence interval is always two-sided regardless of this setting.
@@ -34,7 +33,7 @@
 #' @importFrom glue glue
 independent_medians <- function(data,
                                 outcome,
-                                group,
+                                grouping,
                                 first       = NULL,
                                 m           = 0,
                                 alternative = "two.sided",
@@ -49,7 +48,7 @@ independent_medians <- function(data,
     stop("`alpha` must be numeric and between 0 and 1 (exclusive).", call. = FALSE)
 
   outcome_q <- rlang::enquo(outcome)
-  group_q   <- rlang::enquo(group)
+  group_q   <- rlang::enquo(grouping)
 
   outcome_name <- rlang::as_name(outcome_q)
 

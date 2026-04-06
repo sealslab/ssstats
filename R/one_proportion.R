@@ -8,8 +8,8 @@
 #' @param data A data frame or tibble.
 #' @param outcome Unquoted column name for the binary outcome variable.
 #' @param event The value of `outcome` to treat as a success.
-#' @param p Numeric. Hypothesised proportion under the null. Must be between
-#'   0 and 1 (exclusive).
+#' @param p Numeric. Hypothesized proportion under the null (default = 0.5). 
+#'   Must be between 0 and 1 (exclusive).
 #' @param alternative Character string specifying the alternative hypothesis.
 #'   One of `"two.sided"` (default), `"two"`, `"less"`, or `"greater"`. The
 #'   confidence interval is always two-sided regardless of this setting.
@@ -27,7 +27,7 @@
 one_proportion <- function(data,
                            outcome,
                            event,
-                           p,
+                           p           = 0.5,
                            alternative = "two.sided",
                            alpha       = 0.05) {
 

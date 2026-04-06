@@ -13,8 +13,7 @@
 #' @param data A data frame or tibble.
 #' @param col1 Unquoted column name for the first measurement (numeric).
 #' @param col2 Unquoted column name for the second measurement (numeric).
-#' @param m Numeric. Hypothesised median difference under the null. Defaults
-#'   to `0`.
+#' @param m Numeric. Hypothesized median difference under the null (default = 0).
 #' @param alternative Character string specifying the alternative hypothesis.
 #'   One of `"two.sided"` (default), `"two"`, `"less"`, or `"greater"`. The
 #'   confidence interval is always two-sided regardless of this setting.

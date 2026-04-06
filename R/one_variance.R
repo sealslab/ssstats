@@ -7,7 +7,7 @@
 #'
 #' @param data A data frame or tibble.
 #' @param outcome Unquoted column name for the continuous outcome (numeric).
-#' @param sigma2 Numeric. Hypothesised variance under the null. Must be
+#' @param sigma2 Numeric. Hypothesized variance under the null (default = 1). Must be
 #'   strictly greater than 0.
 #' @param alternative Character string specifying the alternative hypothesis.
 #'   One of \code{"two.sided"} (default), \code{"two"}, \code{"less"}, or
@@ -26,7 +26,7 @@
 #' @importFrom glue glue
 one_variance <- function(data,
                          outcome,
-                         sigma2,
+                         sigma2      = 1,
                          alternative = "two.sided",
                          alpha       = 0.05) {
 

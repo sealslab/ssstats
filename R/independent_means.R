@@ -7,7 +7,7 @@
 #'
 #' @param data A data frame or tibble.
 #' @param outcome Unquoted column name for the continuous outcome (numeric).
-#' @param group Unquoted column name for the grouping variable. Must have
+#' @param grouping Unquoted column name for the grouping variable. Must have
 #'   exactly two levels.
 #' @param first Character string. The group level to treat as the first term
 #'   in the subtraction (i.e., group1 in μ[group1] − μ[group2]). Defaults to
@@ -15,8 +15,7 @@
 #' @param alternative Character string specifying the alternative hypothesis.
 #'   One of `"two.sided"` (default), `"two"`, `"less"`, or `"greater"`. The
 #'   confidence interval is always two-sided regardless of this setting.
-#' @param mu Numeric. Hypothesised mean difference under the null. Defaults
-#'   to `0`.
+#' @param mu Numeric. Hypothesized mean difference under the null (default = 0).
 #' @param alpha Numeric. Significance level between 0 and 1 (exclusive).
 #'   Defaults to `0.05`. The confidence interval is computed at
 #'   \code{(1 - alpha) * 100\%}.
@@ -30,7 +29,7 @@
 #' @importFrom glue glue
 independent_means <- function(data,
                               outcome,
-                              group,
+                              grouping,
                               first = NULL,
                               alternative = "two.sided",
                               mu = 0,
@@ -45,7 +44,7 @@ independent_means <- function(data,
     stop("`alpha` must be numeric and between 0 and 1 (exclusive).", call. = FALSE)
 
   outcome_q <- rlang::enquo(outcome)
-  group_q   <- rlang::enquo(group)
+  group_q   <- rlang::enquo(grouping)
 
   outcome_name <- rlang::as_name(outcome_q)
   group_name   <- rlang::as_name(group_q)
