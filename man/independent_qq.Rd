@@ -4,12 +4,12 @@
 \alias{independent_qq}
 \title{QQ Plots by Group}
 \usage{
-independent_qq(data, continuous, grouping)
+independent_qq(data, outcome, grouping)
 }
 \arguments{
 \item{data}{A data frame or tibble.}
 
-\item{continuous}{Unquoted column name for the continuous outcome (numeric).}
+\item{outcome}{Unquoted column name for the continuous outcome (numeric).}
 
 \item{grouping}{Unquoted column name for the grouping variable. Must have
 exactly two levels.}

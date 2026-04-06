@@ -18,6 +18,9 @@ posthoc_test(
 
 \item{outcome}{Unquoted column name for the continuous outcome (numeric).}
 
+\item{A}{Unquoted column name for the grouping variable. Must have at
+least 2 levels.}
+
 \item{adjust}{Logical. If \code{TRUE} (default), applies Type I error
 adjustment (Tukey's HSD for ANOVA; Bonferroni for Kruskal-Wallis). If
 \code{FALSE}, no adjustment is applied (Fisher's LSD for ANOVA; unadjusted
@@ -29,9 +32,6 @@ Kruskal-Wallis analysis. Requires the \pkg{dunn.test} package.}
 
 \item{alpha}{Numeric. Significance level between 0 and 1 (exclusive).
 Defaults to \code{0.05}.}
-
-\item{group}{Unquoted column name for the grouping variable. Must have at
-least 2 levels.}
 }
 \value{
 Called for its side effect (printed output); returns \code{NULL}

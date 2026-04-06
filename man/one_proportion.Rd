@@ -8,7 +8,7 @@ one_proportion(
   data,
   outcome,
   event,
-  p,
+  p = 0.5,
   alternative = "two.sided",
   alpha = 0.05
 )
@@ -20,8 +20,8 @@ one_proportion(
 
 \item{event}{The value of `outcome` to treat as a success.}
 
-\item{p}{Numeric. Hypothesised proportion under the null. Must be between
-0 and 1 (exclusive).}
+\item{p}{Numeric. Hypothesized proportion under the null (default = 0.5). 
+Must be between 0 and 1 (exclusive).}
 
 \item{alternative}{Character string specifying the alternative hypothesis.
 One of `"two.sided"` (default), `"two"`, `"less"`, or `"greater"`. The

@@ -24,8 +24,7 @@ dependent_means(
 One of `"two.sided"` (default), `"two"`, `"less"`, or `"greater"`. The
 confidence interval is always two-sided regardless of this setting.}
 
-\item{mu}{Numeric. Hypothesised mean difference under the null. Defaults
-to `0`.}
+\item{mu}{Numeric. Hypothesized mean difference under the null (default = 0).}
 
 \item{alpha}{Numeric. Significance level between 0 and 1 (exclusive).
 Defaults to `0.05`. The confidence interval is computed at

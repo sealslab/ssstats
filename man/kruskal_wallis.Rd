@@ -11,11 +11,11 @@ kruskal_wallis(data, outcome, A, alpha = 0.05)
 
 \item{outcome}{Unquoted column name for the continuous outcome (numeric).}
 
+\item{A}{Unquoted column name for the grouping variable. Must have at
+least 2 levels.}
+
 \item{alpha}{Numeric. Significance level between 0 and 1 (exclusive).
 Defaults to `0.05`.}
-
-\item{group}{Unquoted column name for the grouping variable. Must have at
-least 2 levels.}
 }
 \value{
 Called for its side effect (printed output); returns `NULL`

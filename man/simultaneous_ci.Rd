@@ -4,7 +4,7 @@
 \alias{simultaneous_ci}
 \title{Simultaneous Confidence Intervals}
 \usage{
-simultaneous_ci(data, outcome, group, parameter = "mean", alpha = 0.05)
+simultaneous_ci(data, outcome, grouping, parameter = "mean", alpha = 0.05)
 }
 \arguments{
 \item{data}{A data frame or tibble.}
@@ -13,15 +13,15 @@ simultaneous_ci(data, outcome, group, parameter = "mean", alpha = 0.05)
 numeric for \code{"mean"}, \code{"median"}, \code{"variance"}, and
 \code{"sd"}. May be any type for \code{"proportion"}.}
 
-\item{group}{Unquoted column name for the grouping variable. Required for
-all parameters except \code{"proportion"}.}
-
 \item{parameter}{Character string specifying the parameter to estimate.
 One of \code{"mean"} (default), \code{"median"}, \code{"variance"},
 \code{"sd"}, or \code{"proportion"}.}
 
 \item{alpha}{Numeric. Family-wise significance level between 0 and 1
 (exclusive). Defaults to \code{0.05}.}
+
+\item{group}{Unquoted column name for the grouping variable. Required for
+all parameters except \code{"proportion"}.}
 }
 \value{
 A tibble with one row per group (numeric parameters) or one row per

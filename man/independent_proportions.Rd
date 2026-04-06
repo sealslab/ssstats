@@ -7,7 +7,7 @@
 independent_proportions(
   data,
   outcome,
-  group,
+  grouping,
   event,
   first = NULL,
   alternative = "two.sided",
@@ -21,7 +21,7 @@ independent_proportions(
 
 \item{outcome}{Unquoted column name for the binary outcome variable.}
 
-\item{group}{Unquoted column name for the grouping variable. Must have
+\item{grouping}{Unquoted column name for the grouping variable. Must have
 exactly two levels.}
 
 \item{event}{The value of `outcome` to treat as a success.}
@@ -34,8 +34,8 @@ in the subtraction (i.e., group1 in π[group1] − π[group2]). Defaults to
 One of `"two.sided"` (default), `"two"`, `"less"`, or `"greater"`. The
 confidence interval is always two-sided regardless of this setting.}
 
-\item{p}{Numeric. Hypothesized difference in proportions under the null.
-Defaults to `0`.}
+\item{p}{Numeric. Hypothesized difference in proportions under the null 
+(default = 0).}
 
 \item{alpha}{Numeric. Significance level between 0 and 1 (exclusive).
 Defaults to `0.05`. The confidence interval is computed at

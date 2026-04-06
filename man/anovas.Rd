@@ -15,7 +15,7 @@ anovas(data, outcome, A, B = NULL, interaction = TRUE, alpha = 0.05)
 one-way ANOVA, or the first factor in a two-way ANOVA).}
 
 \item{B}{Unquoted column name for the second factor in a two-way ANOVA.
-Omit (or leave as `NULL`) for a one-way ANOVA.}
+Omit for a one-way ANOVA.}
 
 \item{interaction}{Logical. Only relevant when `B` is specified. If `TRUE`
 (default), fits the model `outcome ~ A * B` (main effects plus

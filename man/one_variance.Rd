@@ -4,14 +4,20 @@
 \alias{one_variance}
 \title{One-Sample Variance Test}
 \usage{
-one_variance(data, outcome, sigma2, alternative = "two.sided", alpha = 0.05)
+one_variance(
+  data,
+  outcome,
+  sigma2 = 1,
+  alternative = "two.sided",
+  alpha = 0.05
+)
 }
 \arguments{
 \item{data}{A data frame or tibble.}
 
 \item{outcome}{Unquoted column name for the continuous outcome (numeric).}
 
-\item{sigma2}{Numeric. Hypothesised variance under the null. Must be
+\item{sigma2}{Numeric. Hypothesized variance under the null (default = 1). Must be
 strictly greater than 0.}
 
 \item{alternative}{Character string specifying the alternative hypothesis.

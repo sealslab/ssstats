@@ -7,7 +7,7 @@
 independent_medians(
   data,
   outcome,
-  group,
+  grouping,
   first = NULL,
   m = 0,
   alternative = "two.sided",
@@ -19,15 +19,14 @@ independent_medians(
 
 \item{outcome}{Unquoted column name for the continuous outcome (numeric).}
 
-\item{group}{Unquoted column name for the grouping variable. Must have
+\item{grouping}{Unquoted column name for the grouping variable. Must have
 exactly two levels.}
 
 \item{first}{Character string. The group level to treat as the first term
 in the subtraction (i.e., group1 in M[group1] - M[group2]). Defaults to
 `NULL`, in which case groups are ordered alphabetically.}
 
-\item{m}{Numeric. Hypothesised median difference under the null. Defaults
-to `0`.}
+\item{m}{Numeric. Hypothesized median difference under the null (default = 0).}
 
 \item{alternative}{Character string specifying the alternative hypothesis.
 One of `"two.sided"` (default), `"two"`, `"less"`, or `"greater"`. The

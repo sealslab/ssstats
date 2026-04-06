@@ -7,7 +7,7 @@
 independent_means(
   data,
   outcome,
-  group,
+  grouping,
   first = NULL,
   alternative = "two.sided",
   mu = 0,
@@ -19,7 +19,7 @@ independent_means(
 
 \item{outcome}{Unquoted column name for the continuous outcome (numeric).}
 
-\item{group}{Unquoted column name for the grouping variable. Must have
+\item{grouping}{Unquoted column name for the grouping variable. Must have
 exactly two levels.}
 
 \item{first}{Character string. The group level to treat as the first term
@@ -30,8 +30,7 @@ in the subtraction (i.e., group1 in μ[group1] − μ[group2]). Defaults to
 One of `"two.sided"` (default), `"two"`, `"less"`, or `"greater"`. The
 confidence interval is always two-sided regardless of this setting.}
 
-\item{mu}{Numeric. Hypothesised mean difference under the null. Defaults
-to `0`.}
+\item{mu}{Numeric. Hypothesized mean difference under the null (default = 0).}
 
 \item{alpha}{Numeric. Significance level between 0 and 1 (exclusive).
 Defaults to `0.05`. The confidence interval is computed at

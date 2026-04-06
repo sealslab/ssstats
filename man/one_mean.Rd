@@ -4,14 +4,14 @@
 \alias{one_mean}
 \title{One-Sample Mean}
 \usage{
-one_mean(data, outcome, mu, alternative = "two.sided", alpha = 0.05)
+one_mean(data, outcome, mu = 0, alternative = "two.sided", alpha = 0.05)
 }
 \arguments{
 \item{data}{A data frame or tibble.}
 
 \item{outcome}{Unquoted column name for the continuous outcome (numeric).}
 
-\item{mu}{Numeric. Hypothesised mean under the null.}
+\item{mu}{Numeric. Hypothesized mean under the null (default = 0).}
 
 \item{alternative}{Character string specifying the alternative hypothesis.
 One of `"two.sided"` (default), `"two"`, `"less"`, or `"greater"`. The

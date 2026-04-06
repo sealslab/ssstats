@@ -9,6 +9,11 @@ n_pct(data, row, col = NULL, show = 10, digits = 1, denom = "col")
 \arguments{
 \item{data}{A data frame or tibble.}
 
+\item{row}{Unquoted column name for the row variable.}
+
+\item{col}{Unquoted column name for the column variable. If `NULL`
+(default), a one-way table is returned.}
+
 \item{show}{Maximum number of rows to return (or show). Defaults to 
 `10`. Set to `Inf` to return all rows.}
 
@@ -16,11 +21,6 @@ n_pct(data, row, col = NULL, show = 10, digits = 1, denom = "col")
 
 \item{denom}{Denominator for percentages in two-way tables: `"col"`
 (default), `"row"`, or `"all"`.}
-
-\item{row_var}{Unquoted column name for the row variable.}
-
-\item{col_var}{Unquoted column name for the column variable. If `NULL`
-(default), a one-way table is returned.}
 }
 \value{
 A tibble with one row per level of `row_var` and an `n (pct)`
