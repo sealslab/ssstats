@@ -6,10 +6,10 @@ This is joint work between Ihsan E. Buker and Samantha R. Seals.
 You can install the package using the following code:
 
 ```
-if (!requireNamespace("devtools", quietly = TRUE)) {
-  install.packages("devtools")
+if (!requireNamespace("pak", quietly = TRUE)) {
+  install.packages("pak")
 }
-devtools::install_github("sealslab/ssstats")
+pak::pak("sealslab/ssstats")
 ```
 
 Then, you will call the package into R with `library(ssstats)`.
