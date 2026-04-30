@@ -2,12 +2,13 @@ project:
   type: website
   output-dir: ../docs
 website:
-  title: "ssstats"
+  title: "`ssstats`"
   navbar:
     left:
       - href: index.qmd
         text: Home
-      - about.qmd
+      - href: tutorials/index.qmd
+        text: Tutorials
 format:
   html:
     theme: cosmo

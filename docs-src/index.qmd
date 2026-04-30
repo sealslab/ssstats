@@ -1,5 +1,29 @@
----
-title: "ssstats"
----
+# `ssstats`: a package for applied statistics courses
+
+:::: {.columns}
+
+::: {.column width="15%"}
+<img src="https://sealslab.github.io/files/logo/ssstats_v1.png" width=150>
+:::
+
+::: {.column width="85%"}
+This package was developed for use in applied statistics courses at the University of West Florida. All functions were developed to bring a tidy approach to applied statistics, making R syntax consistent and easier to understand for first-time programmers.
+:::
+
+::::
+
+**Authorship**:
+
+- Ihsan Buker: original developer of package, current contributor, maintainer, and cleaner-upper of messes
+- Dr. Samantha Seals: current developer and maker of messes.
+
+**Links**:
+
+- GitHub repo (with install instructions): [http://github.com/sealslab/ssstats](http://github.com/sealslab/ssstats)
+- Course implementations: 
+    - [STA4173 - Biostatistics - Fall 2025](https://samanthaseals.github.io/STA4173Fa25/)
+    - [STA4231/STA6232 - Statistics for Data Science II](https://samanthaseals.github.io/SDSII)
+    
+
 
 

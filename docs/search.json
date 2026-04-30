@@ -9,8 +9,218 @@
   {
     "objectID": "index.html",
     "href": "index.html",
-    "title": "ssstats",
+    "title": "ssstats: a package for applied statistics courses",
     "section": "",
-    "text": "This is a Quarto website.\nTo learn more about Quarto websites visit https://quarto.org/docs/websites."
+    "text": "ssstats: a package for applied statistics courses\n\n\n\n\nThis package was developed for use in applied statistics courses at the University of West Florida. All functions were developed to bring a tidy approach to applied statistics, making R syntax consistent and easier to understand for first-time programmers.\n\n\nAuthorship:\n\nIhsan Buker: original developer of package, current contributor, maintainer, and cleaner-upper of messes\nDr. Samantha Seals: current developer and maker of messes.\n\nLinks:\n\nGitHub repo (with install instructions): http://github.com/sealslab/ssstats\nCourse implementations:\n\nSTA4173 - Biostatistics - Fall 2025\nSTA4231/STA6232 - Statistics for Data Science II"
+  },
+  {
+    "objectID": "tutorials/mean_median.html",
+    "href": "tutorials/mean_median.html",
+    "title": "mean_median()",
+    "section": "",
+    "text": "The mean_median() function provides the mean, standard deviation, median, and IQR of specified continuous variables."
+  },
+  {
+    "objectID": "tutorials/mean_median.html#overview",
+    "href": "tutorials/mean_median.html#overview",
+    "title": "mean_median()",
+    "section": "",
+    "text": "The mean_median() function provides the mean, standard deviation, median, and IQR of specified continuous variables."
+  },
+  {
+    "objectID": "tutorials/mean_median.html#arguments",
+    "href": "tutorials/mean_median.html#arguments",
+    "title": "mean_median()",
+    "section": "Arguments",
+    "text": "Arguments\n\n\n\nArgument\nType\nDescription\n\n\n\n\nvar_1\nnumeric\nthe first variable for description\n\n\nvar_2\nnumeric\nthe second variable for description\n\n\n…\n…\n…\n\n\nvar_k\nnumeric\nthe kth variable for description"
+  },
+  {
+    "objectID": "tutorials/mean_median.html#example-1",
+    "href": "tutorials/mean_median.html#example-1",
+    "title": "mean_median()",
+    "section": "Example 1",
+    "text": "Example 1\n\nproductivity %&gt;% \n  mean_median(hours_sleep, cups_coffee)\n\n# A tibble: 2 × 3\n  variable    mean_sd   median_iqr\n  &lt;chr&gt;       &lt;chr&gt;     &lt;chr&gt;     \n1 cups_coffee 2.5 (1.8) 2.0 (2.0) \n2 hours_sleep 7.0 (1.5) 7.0 (2.0)"
+  },
+  {
+    "objectID": "tutorials/mean_median.html#example-2",
+    "href": "tutorials/mean_median.html#example-2",
+    "title": "mean_median()",
+    "section": "Example 2",
+    "text": "Example 2\n\nproductivity %&gt;% \n  group_by(character) %&gt;%\n  mean_median(hours_sleep, cups_coffee)\n\n# A tibble: 12 × 4\n   character variable    mean_sd   median_iqr\n   &lt;fct&gt;     &lt;chr&gt;       &lt;chr&gt;     &lt;chr&gt;     \n 1 Daisy     cups_coffee 2.0 (1.5) 2.0 (2.0) \n 2 Donald    cups_coffee 3.9 (2.0) 4.0 (3.0) \n 3 Goofy     cups_coffee 3.1 (1.8) 3.0 (2.0) \n 4 Mickey    cups_coffee 2.1 (1.4) 2.0 (2.0) \n 5 Minnie    cups_coffee 2.0 (1.4) 2.0 (2.0) \n 6 Pluto     cups_coffee 2.0 (1.4) 2.0 (2.0) \n 7 Daisy     hours_sleep 7.0 (1.5) 7.0 (2.0) \n 8 Donald    hours_sleep 7.1 (1.6) 7.0 (2.1) \n 9 Goofy     hours_sleep 7.0 (1.6) 6.9 (2.2) \n10 Mickey    hours_sleep 7.0 (1.5) 7.1 (1.9) \n11 Minnie    hours_sleep 7.0 (1.5) 7.1 (2.1) \n12 Pluto     hours_sleep 6.9 (1.5) 6.9 (2.0)"
+  },
+  {
+    "objectID": "tutorials/data.html",
+    "href": "tutorials/data.html",
+    "title": "Example Data",
+    "section": "",
+    "text": "Researchers are interested in understanding what factors influence daily productivity and well-being among members of the Mickey and Friends community. Each observation in this dataset represents a single day in the life of one character. The goal of this study is to explore how sleep, mood, environment, and daily experiences contribute to productivity and interpersonal outcomes.\nThe dataset contains the following variables:\n\ncharacter: Mickey, Minnie, Donald, Daisy, Goofy, Pluto\nrole_type: Leader, Creative, Chaotic, Support\nday_of_week: Monday – Sunday\nweather: Sunny, Cloudy, Rainy, Windy\nhours_sleep: Number of hours of sleep the character got the previous night\ncups_coffee: Number of cups of coffee consumed that day\nmood_score: Self-reported mood on a scale from 1 (very poor) to 10 (excellent)\nenergy_level: Self-reported energy level on a scale from 1 (very low) to 10 (very high)\ntasks_completed: Number of productive tasks completed that day\nmishaps: Number of mistakes, accidents, or unexpected problems encountered\nhad_argument: Whether the character had an argument with someone that day (0 = No, 1 = Yes)\nproductivity_score: A continuous measure of overall productivity (higher values indicate greater productivity)\n\n\nload(\"/Users/sseals/Desktop/GitHub/sealslab/ssstats/docs-src/files/productivity.RData\")\nhead(productivity)\n\n  character role_type day_of_week weather hours_sleep cups_coffee energy_level\n1     Daisy  Creative         Mon   Rainy    8.205495           3          9.8\n2    Minnie  Creative         Tue   Sunny    8.212625           2         10.0\n3    Minnie  Creative         Sat   Sunny    6.628013           1          8.1\n4    Minnie  Creative         Mon   Sunny    9.678781           2          9.7\n5     Goofy   Chaotic         Thu   Sunny    5.752713           4          8.6\n6     Daisy  Creative         Mon   Sunny    7.122821           4         10.0\n  mood_score mishaps tasks_completed had_argument productivity_score\n1        7.6       0              71            0             202.12\n2        9.3       0              75            0             218.36\n3       10.0       0              69            0             193.03\n4       10.0       0              80            0             228.35\n5        9.9       0              66            0             195.07\n6        7.0       1              49            1             163.35"
+  },
+  {
+    "objectID": "tutorials/index.html",
+    "href": "tutorials/index.html",
+    "title": "Tutorials for ssstats",
+    "section": "",
+    "text": "Class-specific:\n\nSTA4173 (Biostatistics)\nSTA4231 and STA6262 (Statistics for Data Science II)\n\nAlphabetical list:"
+  },
+  {
+    "objectID": "tutorials/n_pct.html",
+    "href": "tutorials/n_pct.html",
+    "title": "n_pct()",
+    "section": "",
+    "text": "The n_pct() function provides a frequency table for one variable or an R \\(\\times\\) C contingency table for two variables."
+  },
+  {
+    "objectID": "tutorials/n_pct.html#arguments",
+    "href": "tutorials/n_pct.html#arguments",
+    "title": "n_pct()",
+    "section": "Arguments",
+    "text": "Arguments\n\n\n\n\n\n\n\n\nArgument\nType\nDescription\n\n\n\n\nvar_1 (required)\nnumeric\nthe first variable for description\n\n\nvar_2 (optional)\nnumeric\nthe second variable for description\n\n\ndenom (optional)\n–\n“col” (default) provides column frequencies while “row” provides row frequencies in contingency tables."
+  },
+  {
+    "objectID": "tutorials/n_pct.html#example-1",
+    "href": "tutorials/n_pct.html#example-1",
+    "title": "n_pct()",
+    "section": "Example 1",
+    "text": "Example 1\n\nproductivity %&gt;% \n  n_pct(role_type)\n\n role_type      n (pct)\n   Chaotic 1687 (33.7%)\n  Creative 1637 (32.7%)\n    Leader  846 (16.9%)\n   Support  830 (16.6%)"
+  },
+  {
+    "objectID": "tutorials/n_pct.html#example-2",
+    "href": "tutorials/n_pct.html#example-2",
+    "title": "n_pct()",
+    "section": "Example 2",
+    "text": "Example 2\n\nproductivity %&gt;% \n  n_pct(weather, role_type)\n\n# A tibble: 4 × 5\n  weather Chaotic     Creative    Leader      Support    \n  &lt;fct&gt;   &lt;chr&gt;       &lt;chr&gt;       &lt;chr&gt;       &lt;chr&gt;      \n1 Cloudy  501 (29.7%) 514 (31.4%) 258 (30.5%) 245 (29.5%)\n2 Rainy   342 (20.3%) 322 (19.7%) 159 (18.8%) 157 (18.9%)\n3 Sunny   680 (40.3%) 644 (39.3%) 348 (41.1%) 356 (42.9%)\n4 Windy   164 (9.7%)  157 (9.6%)  81 (9.6%)   72 (8.7%)"
+  },
+  {
+    "objectID": "tutorials/n_pct.html#example-3",
+    "href": "tutorials/n_pct.html#example-3",
+    "title": "n_pct()",
+    "section": "Example 3",
+    "text": "Example 3\n\nproductivity %&gt;% \n  n_pct(weather, role_type, denom = \"row\")\n\n# A tibble: 4 × 5\n  weather Chaotic     Creative    Leader      Support    \n  &lt;fct&gt;   &lt;chr&gt;       &lt;chr&gt;       &lt;chr&gt;       &lt;chr&gt;      \n1 Cloudy  501 (33.0%) 514 (33.9%) 258 (17.0%) 245 (16.1%)\n2 Rainy   342 (34.9%) 322 (32.9%) 159 (16.2%) 157 (16.0%)\n3 Sunny   680 (33.5%) 644 (31.8%) 348 (17.2%) 356 (17.6%)\n4 Windy   164 (34.6%) 157 (33.1%) 81 (17.1%)  72 (15.2%)"
+  },
+  {
+    "objectID": "tutorials/table_one.html",
+    "href": "tutorials/table_one.html",
+    "title": "table_one()",
+    "section": "",
+    "text": "The table_one() function provides a customizable table of descriptive statistics, similar to a traditional Table 1 in biostatistics and epidemiology."
+  },
+  {
+    "objectID": "tutorials/table_one.html#arguments",
+    "href": "tutorials/table_one.html#arguments",
+    "title": "table_one()",
+    "section": "Arguments",
+    "text": "Arguments\n\n\n\n\n\n\n\n\nArgument\nType\nDescription\n\n\n\n\ncont_vars\nlist\na list of continuous variables for description\n\n\ncat_vars\nlist\na list of categorical variables for description\n\n\nsplit_var\nvariable name\nthe name of the variable to “split” the table on\n\n\ncont_summary\n–\n“mean” (default) or “median”\n\n\ncat_pct\n–\n“col” (default) or “row”\n\n\nshow_miss_cont\nlogical\nTRUE or FALSE (default); toggle for the count of missing observations in the continuous variables\n\n\nshow_miss_cat\nlogical\nTRUE or FALSE (default); toggle for the count of missing observations in the categorical variables\n\n\ndigits_cont\nnumeric\nthe number of decimal places to display for descriptions of continuous variables (default = 2)\n\n\ndigits_cat\nnumeric\nthe number of decimal places to display for descriptions of categorical variables (default = 1)\n\n\n\nIf working in Quarto or R Markdown, kable can be used to format tables."
+  },
+  {
+    "objectID": "tutorials/table_one.html#example-1",
+    "href": "tutorials/table_one.html#example-1",
+    "title": "table_one()",
+    "section": "Example 1",
+    "text": "Example 1\n\nproductivity %&gt;% \n  table_one(cont_vars = c(hours_sleep, cups_coffee, energy_level),\n            cat_vars = c(role_type))\n\n# A tibble: 8 × 3\n  variable       level      `Overall (n=5000)`\n  &lt;chr&gt;          &lt;chr&gt;      &lt;chr&gt;             \n1 \"hours_sleep\"  \"\"         \"7 (1.53)\"        \n2 \"cups_coffee\"  \"\"         \"2.52 (1.75)\"     \n3 \"energy_level\" \"\"         \"8.47 (1.3)\"      \n4 \"role_type\"    \"\"         \"\"                \n5 \"\"             \"Chaotic\"  \"1687 (33.7%)\"    \n6 \"\"             \"Creative\" \"1637 (32.7%)\"    \n7 \"\"             \"Leader\"   \"846 (16.9%)\"     \n8 \"\"             \"Support\"  \"830 (16.6%)\""
+  },
+  {
+    "objectID": "tutorials/table_one.html#example-2",
+    "href": "tutorials/table_one.html#example-2",
+    "title": "table_one()",
+    "section": "Example 2",
+    "text": "Example 2\n\nproductivity %&gt;% \n  table_one(cont_vars = c(hours_sleep, cups_coffee, energy_level),\n            cat_vars = c(role_type),\n            cont_summary = \"median\")\n\n# A tibble: 8 × 3\n  variable       level      `Overall (n=5000)` \n  &lt;chr&gt;          &lt;chr&gt;      &lt;chr&gt;              \n1 \"hours_sleep\"  \"\"         \"7.01 (5.98, 8.01)\"\n2 \"cups_coffee\"  \"\"         \"2 (1, 3)\"         \n3 \"energy_level\" \"\"         \"8.6 (7.5, 9.7)\"   \n4 \"role_type\"    \"\"         \"\"                 \n5 \"\"             \"Chaotic\"  \"1687 (33.7%)\"     \n6 \"\"             \"Creative\" \"1637 (32.7%)\"     \n7 \"\"             \"Leader\"   \"846 (16.9%)\"      \n8 \"\"             \"Support\"  \"830 (16.6%)\""
+  },
+  {
+    "objectID": "tutorials/table_one.html#example-3",
+    "href": "tutorials/table_one.html#example-3",
+    "title": "table_one()",
+    "section": "Example 3",
+    "text": "Example 3\n\nproductivity %&gt;% \n  table_one(cont_vars = c(hours_sleep, cups_coffee, energy_level),\n            cat_vars = c(role_type),\n            split_var = \"had_argument\")\n\n# A tibble: 8 × 5\n  variable       level  `0 (n=4869, 97.4%)` `1 (n=131, 2.6%)` `Overall (n=5000)`\n  &lt;chr&gt;          &lt;chr&gt;  &lt;chr&gt;               &lt;chr&gt;             &lt;chr&gt;             \n1 \"hours_sleep\"  \"\"     \"6.99 (1.53)\"       \"7.04 (1.49)\"     \"7 (1.53)\"        \n2 \"cups_coffee\"  \"\"     \"2.52 (1.75)\"       \"2.35 (1.79)\"     \"2.52 (1.75)\"     \n3 \"energy_level\" \"\"     \"8.47 (1.3)\"        \"8.48 (1.28)\"     \"8.47 (1.3)\"      \n4 \"role_type\"    \"\"     \"\"                  \"\"                \"\"                \n5 \"\"             \"Chao… \"1649 (33.9%)\"      \"38 (29%)\"        \"1687 (33.7%)\"    \n6 \"\"             \"Crea… \"1588 (32.6%)\"      \"49 (37.4%)\"      \"1637 (32.7%)\"    \n7 \"\"             \"Lead… \"820 (16.8%)\"       \"26 (19.8%)\"      \"846 (16.9%)\"     \n8 \"\"             \"Supp… \"812 (16.7%)\"       \"18 (13.7%)\"      \"830 (16.6%)\""
+  },
+  {
+    "objectID": "tutorials/table_one.html#example-4",
+    "href": "tutorials/table_one.html#example-4",
+    "title": "table_one()",
+    "section": "Example 4",
+    "text": "Example 4\n\nkable(productivity %&gt;% \n  table_one(cont_vars = c(hours_sleep, cups_coffee, energy_level),\n            cat_vars = c(role_type),\n            split_var = \"had_argument\"))\n\n\n\n\n\n\n\n\n\n\n\nvariable\nlevel\n0 (n=4869, 97.4%)\n1 (n=131, 2.6%)\nOverall (n=5000)\n\n\n\n\nhours_sleep\n\n6.99 (1.53)\n7.04 (1.49)\n7 (1.53)\n\n\ncups_coffee\n\n2.52 (1.75)\n2.35 (1.79)\n2.52 (1.75)\n\n\nenergy_level\n\n8.47 (1.3)\n8.48 (1.28)\n8.47 (1.3)\n\n\nrole_type\n\n\n\n\n\n\n\nChaotic\n1649 (33.9%)\n38 (29%)\n1687 (33.7%)\n\n\n\nCreative\n1588 (32.6%)\n49 (37.4%)\n1637 (32.7%)\n\n\n\nLeader\n820 (16.8%)\n26 (19.8%)\n846 (16.9%)\n\n\n\nSupport\n812 (16.7%)\n18 (13.7%)\n830 (16.6%)"
+  },
+  {
+    "objectID": "tutorials/STA4173.html",
+    "href": "tutorials/STA4173.html",
+    "title": "Tutorials relevant for STA4173",
+    "section": "",
+    "text": "mean_median()\nn_pct()\ntable_one()\n[one_mean()]\n[one_proportion()]"
+  },
+  {
+    "objectID": "tutorials/STA4173.html#module-0-reviewing-sta2023",
+    "href": "tutorials/STA4173.html#module-0-reviewing-sta2023",
+    "title": "Tutorials relevant for STA4173",
+    "section": "",
+    "text": "mean_median()\nn_pct()\ntable_one()\n[one_mean()]\n[one_proportion()]"
+  },
+  {
+    "objectID": "tutorials/STA4173.html#module-1-two-sample-inference",
+    "href": "tutorials/STA4173.html#module-1-two-sample-inference",
+    "title": "Tutorials relevant for STA4173",
+    "section": "Module 1: Two-Sample Inference",
+    "text": "Module 1: Two-Sample Inference\n\n[independent_means()]\n\n[independent_qq()]\n[variance_check()]\n[two_variances()]\n\n[independent_medians()]\n[dependent_means()]\n\n[dependent_qq()\n\n[dependent_medians()]"
+  },
+  {
+    "objectID": "tutorials/STA4173.html#module-2-more-than-two-samples",
+    "href": "tutorials/STA4173.html#module-2-more-than-two-samples",
+    "title": "Tutorials relevant for STA4173",
+    "section": "Module 2: More than Two Samples",
+    "text": "Module 2: More than Two Samples\n\n[anovas()]\n\n[anova_check()]\n[normality_check()]\n[variance_check()]\n[multiple_variances()]\n\n[kruskal_wallis()]\n[posthoc()]\n[profile_plot()]\n[simultaenous_ci()]"
+  },
+  {
+    "objectID": "tutorials/STA4173.html#module-3-correlation-and-regression",
+    "href": "tutorials/STA4173.html#module-3-correlation-and-regression",
+    "title": "Tutorials relevant for STA4173",
+    "section": "Module 3: Correlation and Regression",
+    "text": "Module 3: Correlation and Regression\n\n[correlation()]\n\n[correlation_qq()]\n\n[linear_regression()]\n\n[glm_table()]\n[normality_check()]\n[outlier_count()]\n[outlier_graph()]\n[plot_residuals()]\n[r_squared()]\n[reg_check()]\n[significant_line()]\n[cooks()]"
+  },
+  {
+    "objectID": "tutorials/STA4173.html#module-4-categorical-analysis",
+    "href": "tutorials/STA4173.html#module-4-categorical-analysis",
+    "title": "Tutorials relevant for STA4173",
+    "section": "Module 4: Categorical Analysis",
+    "text": "Module 4: Categorical Analysis\n\n[one_proportion()]\n[independent_proportions()]\n[dependent_proportions()]\n[goodness_of_fit()]\n[independence()]"
+  },
+  {
+    "objectID": "tutorials/one_mean.html",
+    "href": "tutorials/one_mean.html",
+    "title": "one_mean()",
+    "section": "",
+    "text": "The one_mean() function returns:"
+  },
+  {
+    "objectID": "tutorials/one_mean.html#arguments",
+    "href": "tutorials/one_mean.html#arguments",
+    "title": "one_mean()",
+    "section": "Arguments",
+    "text": "Arguments\n\n\n\n\n\n\n\n\nArgument\nType\nDescription\n\n\n\n\noutcome\nnumeric and continuous\nthe variable to make inference on\n\n\nmu\nnumeric\nhypothesized value for hypotheses (default = 0)\n\n\nalternative\n–\nthe direction of the hypothesis test; “two.sided” (default), “two”, “less”, or “greater”\n\n\nalpha\nnumeric\nspecified \\(\\alpha\\) (default = 0.05)"
+  },
+  {
+    "objectID": "tutorials/one_mean.html#example-1",
+    "href": "tutorials/one_mean.html#example-1",
+    "title": "one_mean()",
+    "section": "Example 1",
+    "text": "Example 1\n\nproductivity %&gt;% \n  one_mean(cups_coffee,\n           mu = 2)\n\nOne-sample mean\n\nx̅ = 2.5152 (SD = 1.7512)\n\n95% CI for μ: (2.4666, 2.5638)\n\nHypotheses:\nH₀: μ = 2\nH₁: μ ≠ 2\nTest statistic: t(4999) = 20.803\np-value: &lt; 0.001\nConclusion: Reject the null hypothesis (p = &lt; 0.001 &lt; α = 0.050)"
+  },
+  {
+    "objectID": "tutorials/one_mean.html#example-2",
+    "href": "tutorials/one_mean.html#example-2",
+    "title": "one_mean()",
+    "section": "Example 2",
+    "text": "Example 2\n\nproductivity %&gt;% \n  one_mean(cups_coffee,\n           mu = 2,\n           alternative = \"greater\")\n\nOne-sample mean\n\nx̅ = 2.5152 (SD = 1.7512)\n\n95% CI for μ: (2.4666, 2.5638)\n\nHypotheses:\nH₀: μ ≤ 2\nH₁: μ &gt; 2\nTest statistic: t(4999) = 20.803\np-value: &lt; 0.001\nConclusion: Reject the null hypothesis (p = &lt; 0.001 &lt; α = 0.050)"
+  },
+  {
+    "objectID": "tutorials/one_mean.html#example-3",
+    "href": "tutorials/one_mean.html#example-3",
+    "title": "one_mean()",
+    "section": "Example 3",
+    "text": "Example 3\n\nproductivity %&gt;% \n  one_mean(cups_coffee,\n           mu = 2,\n           alpha = 0.1)\n\nOne-sample mean\n\nx̅ = 2.5152 (SD = 1.7512)\n\n90% CI for μ: (2.4745, 2.5559)\n\nHypotheses:\nH₀: μ = 2\nH₁: μ ≠ 2\nTest statistic: t(4999) = 20.803\np-value: &lt; 0.001\nConclusion: Reject the null hypothesis (p = &lt; 0.001 &lt; α = 0.100)"
+  },
+  {
+    "objectID": "tutorials/one_mean.html#related-functions",
+    "href": "tutorials/one_mean.html#related-functions",
+    "title": "one_mean()",
+    "section": "Related Functions",
+    "text": "Related Functions\nUsers may also be interested in the one_qq_plot() function to assess for normality."
   }
 ]
