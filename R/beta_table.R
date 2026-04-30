@@ -38,7 +38,7 @@ beta_table <- function(..., model_names = NULL) {
   process_model <- function(model) {
     model %>%
       broom::tidy(conf.int = TRUE) %>%
-      dplyr::filter(term != "(Intercept)", component == "mean") %>%
+      dplyr::filter(term != "(Intercept)", component == "mu") %>%
       dplyr::mutate(
         estimate = exp(estimate),
         conf.low = exp(conf.low),
