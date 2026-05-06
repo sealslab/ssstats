@@ -1,8 +1,7 @@
 #' @title Diagnostic Plots for Regression Models
 #' @description Creates diagnostic plots for a fitted regression model object or directly from data and variables.
 #'
-#' @param model Either a fitted regression model object of class \code{lm}, \code{glm}, or \code{aov}, 
-#'              or \code{NULL} if using \code{data}, \code{continuous}, and \code{function_of}.
+#' @param model Either a fitted regression model object of class \code{lm}, \code{glm}, or \code{aov},  or \code{NULL} if using \code{data}, \code{continuous}, and \code{function_of}.
 #' @param data (Optional) A data frame containing the data.
 #' @param continuous (Optional) The numeric predictor or outcome column in \code{data}.
 #' @param function_of (Optional) The grouping or explanatory column in \code{data}.
@@ -20,9 +19,7 @@
 #'           continuous = bill_length_mm, function_of = bill_depth_mm)
 #' }
 #'
-#' @importFrom ggplot2 ggplot aes geom_point labs geom_hline theme_bw
-#'   geom_histogram after_stat stat_function geom_vline theme element_blank
-#'   stat_qq stat_qq_line
+#' @importFrom ggplot2 ggplot aes geom_point labs geom_hline theme_bw geom_histogram after_stat stat_function geom_vline theme element_blank stat_qq stat_qq_line
 #' @importFrom ggpubr ggarrange
 #' @importFrom rlang enquo as_name
 #' @importFrom stats lm residuals fitted.values rstandard dnorm sd
