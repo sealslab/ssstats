@@ -20,9 +20,9 @@ Imports: broom, dplyr, ggplot2, ggpubr, glue, gt, janitor, magrittr,
         patchwork, purrr, rlang, scales, tibble, tidyr, tidyselect
 Suggests: dunn.test, knitr, palmerpenguins, rmarkdown, tidyverse
 VignetteBuilder: knitr
-RoxygenNote: 7.3.3
 NeedsCompilation: no
 Packaged: 2025-07-22 03:26:10 UTC; ihsanbuker
 Author: Ihsan Buker [aut, cre], Samantha Seals [aut]
 Maintainer: Samantha Seals <sseals@uwf.edu>
 URL: https://sealslab.github.io/ssstats/
+Config/roxygen2/version: 8.0.0
