@@ -12,25 +12,17 @@ normality_check(
 )
 }
 \arguments{
-\item{model}{A fitted model object of class \code{lm}, \code{glm}, or
-\code{aov}. If \code{NULL}, \code{data}, \code{continuous}, and
-\code{function_of} must be supplied.}
+\item{model}{A fitted model object of class \code{lm}, \code{glm}, or \code{aov}. If \code{NULL}, \code{data}, \code{continuous}, and \code{function_of} must be supplied.}
 
-\item{data}{A data frame or tibble. Used only when \code{model} is
-\code{NULL}.}
+\item{data}{A data frame or tibble. Used only when \code{model} is \code{NULL}.}
 
-\item{continuous}{Unquoted column name for the continuous outcome. Used only
-when \code{model} is \code{NULL}.}
+\item{continuous}{Unquoted column name for the continuous outcome. Used only when \code{model} is \code{NULL}.}
 
-\item{function_of}{Unquoted column name for the grouping or predictor
-variable. Used only when \code{model} is \code{NULL}.}
+\item{function_of}{Unquoted column name for the grouping or predictor variable. Used only when \code{model} is \code{NULL}.}
 }
 \value{
-A \code{ggpubr} arranged plot object containing a QQ plot and a
-  histogram of residuals.
+A \code{ggpubr} arranged plot object containing a QQ plot and a histogram of residuals.
 }
 \description{
-Produces a QQ plot and histogram of residuals for assessing
-  the normality assumption of a regression or ANOVA model. Accepts a fitted
-  model object or raw data with column names.
+Produces a QQ plot and histogram of residuals for assessing the normality assumption of a regression or ANOVA model. Accepts a fitted model object or raw data with column names.
 }

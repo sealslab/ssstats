@@ -1,28 +1,20 @@
 #' Normality Diagnostic Plots
 #'
-#' @description Produces a QQ plot and histogram of residuals for assessing
-#'   the normality assumption of a regression or ANOVA model. Accepts a fitted
-#'   model object or raw data with column names.
+#' @description Produces a QQ plot and histogram of residuals for assessing the normality assumption of a regression or ANOVA model. Accepts a fitted model object or raw data with column names.
 #'
-#' @param model A fitted model object of class \code{lm}, \code{glm}, or
-#'   \code{aov}. If \code{NULL}, \code{data}, \code{continuous}, and
-#'   \code{function_of} must be supplied.
-#' @param data A data frame or tibble. Used only when \code{model} is
-#'   \code{NULL}.
-#' @param continuous Unquoted column name for the continuous outcome. Used only
-#'   when \code{model} is \code{NULL}.
-#' @param function_of Unquoted column name for the grouping or predictor
-#'   variable. Used only when \code{model} is \code{NULL}.
+#' @param model A fitted model object of class \code{lm}, \code{glm}, or \code{aov}. If \code{NULL}, \code{data}, \code{continuous}, and \code{function_of} must be supplied.
+#' @param data A data frame or tibble. Used only when \code{model} is \code{NULL}.
+#' @param continuous Unquoted column name for the continuous outcome. Used only when \code{model} is \code{NULL}.
+#' @param function_of Unquoted column name for the grouping or predictor variable. Used only when \code{model} is \code{NULL}.
 #'
-#' @return A \code{ggpubr} arranged plot object containing a QQ plot and a
-#'   histogram of residuals.
+#' @return A \code{ggpubr} arranged plot object containing a QQ plot and a histogram of residuals.
 #'
 #' @export
 #' @importFrom rlang enquo as_name
-#' @importFrom ggplot2 ggplot aes stat_qq stat_qq_line labs theme_classic
-#'   geom_histogram after_stat stat_function geom_vline theme element_blank
+#' @importFrom ggplot2 ggplot aes stat_qq stat_qq_line labs theme_classic geom_histogram after_stat stat_function geom_vline theme element_blank
 #' @importFrom ggpubr ggarrange
 #' @importFrom stats lm residuals rstandard dnorm sd
+
 normality_check <- function(model = NULL, data = NULL, continuous = NULL, function_of = NULL) {
   # Check for model input or data-driven input
   if (!is.null(model)) {
