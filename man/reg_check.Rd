@@ -7,8 +7,7 @@
 reg_check(model = NULL, data = NULL, continuous = NULL, function_of = NULL)
 }
 \arguments{
-\item{model}{Either a fitted regression model object of class \code{lm}, \code{glm}, or \code{aov}, 
-or \code{NULL} if using \code{data}, \code{continuous}, and \code{function_of}.}
+\item{model}{Either a fitted regression model object of class \code{lm}, \code{glm}, or \code{aov},  or \code{NULL} if using \code{data}, \code{continuous}, and \code{function_of}.}
 
 \item{data}{(Optional) A data frame containing the data.}
 
