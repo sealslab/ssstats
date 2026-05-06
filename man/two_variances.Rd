@@ -7,7 +7,7 @@
 two_variances(
   data,
   outcome,
-  A,
+  grouping,
   first = NULL,
   alternative = "two.sided",
   alpha = 0.05
@@ -18,7 +18,7 @@ two_variances(
 
 \item{outcome}{Unquoted column name for the continuous outcome (numeric).}
 
-\item{A}{Unquoted column name for the grouping variable. Must have exactly
+\item{grouping}{Unquoted column name for the grouping variable. Must have exactly
 two levels.}
 
 \item{first}{Character string. The group level to treat as the first term
