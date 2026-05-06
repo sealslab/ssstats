@@ -8,7 +8,7 @@
 #'
 #' @param data A data frame or tibble.
 #' @param outcome Unquoted column name for the continuous outcome (numeric).
-#' @param A Unquoted column name for the grouping variable. Must have exactly
+#' @param grouping Unquoted column name for the grouping variable. Must have exactly
 #'   two levels.
 #' @param first Character string. The group level to treat as the first term
 #'   in the ratio (i.e., group1 in \eqn{\sigma^2_{group1} / \sigma^2_{group2}}).
@@ -30,7 +30,7 @@
 #' @importFrom glue glue
 two_variances <- function(data,
                           outcome,
-                          A,
+                          grouping,
                           first       = NULL,
                           alternative = "two.sided",
                           alpha       = 0.05) {
@@ -42,7 +42,7 @@ two_variances <- function(data,
     stop("`alpha` must be numeric and between 0 and 1 (exclusive).", call. = FALSE)
 
   outcome_q <- rlang::enquo(outcome)
-  A_q       <- rlang::enquo(A)
+  A_q       <- rlang::enquo(grouping)
 
   outcome_name <- rlang::as_name(outcome_q)
   A_name       <- rlang::as_name(A_q)
