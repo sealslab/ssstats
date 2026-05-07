@@ -4,14 +4,14 @@
 \alias{independence}
 \title{Chi-Square Test of Independence}
 \usage{
-independence(data, var1, var2, alpha = 0.05)
+independence(data, col1, col2, alpha = 0.05)
 }
 \arguments{
 \item{data}{A data frame or tibble.}
 
-\item{var1}{Unquoted column name of the first categorical variable.}
+\item{col1}{Unquoted column name of the first categorical variable.}
 
-\item{var2}{Unquoted column name of the second categorical variable.}
+\item{col2}{Unquoted column name of the second categorical variable.}
 
 \item{alpha}{Numeric. Significance level between 0 and 1 (exclusive).
 Defaults to \code{0.05}.}

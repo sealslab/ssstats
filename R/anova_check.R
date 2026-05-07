@@ -7,7 +7,7 @@
 #' default but can be suppressed via the \code{interaction} argument.
 #'
 #' @param data Dataframe or tibble.
-#' @param continuous Unquoted column name for continuous outcome.
+#' @param outcome Unquoted column name for continuous outcome.
 #' @param A Unquoted column name for grouping variable (factor).
 #' @param B Unquoted column name for grouping variable (factor).
 #' @param interaction Indicator for inclusion of A:B interaction.
@@ -21,9 +21,9 @@
 #' @importFrom stats aov as.formula fitted residuals
 #' @importFrom glue glue
 
-anova_check <- function(data, continuous, A, B = NULL, interaction = TRUE) {
+anova_check <- function(data, outcome, A, B = NULL, interaction = TRUE) {
 
-  y_q <- rlang::enquo(continuous)
+  y_q <- rlang::enquo(outcome)
   A_q <- rlang::enquo(A)
   B_q <- rlang::enquo(B)
 

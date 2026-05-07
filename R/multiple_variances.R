@@ -12,7 +12,7 @@
 #'
 #' @param data A data frame or tibble.
 #' @param outcome Unquoted column name for the continuous outcome (numeric).
-#' @param A Unquoted column name for the grouping variable. Must have at least
+#' @param grouping Unquoted column name for the grouping variable. Must have at least
 #'   2 levels.
 #' @param alpha Numeric. Significance level between 0 and 1 (exclusive).
 #'   Defaults to \code{0.05}.
@@ -26,14 +26,14 @@
 #' @importFrom glue glue
 multiple_variances <- function(data,
                                outcome,
-                               A,
+                               grouping,
                                alpha = 0.05) {
 
   if (!is.numeric(alpha) || alpha <= 0 || alpha >= 1)
     stop("`alpha` must be numeric and between 0 and 1 (exclusive).", call. = FALSE)
 
   outcome_q <- rlang::enquo(outcome)
-  A_q       <- rlang::enquo(A)
+  A_q       <- rlang::enquo(grouping)
 
   outcome_name <- rlang::as_name(outcome_q)
   A_name       <- rlang::as_name(A_q)

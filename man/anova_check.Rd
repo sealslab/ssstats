@@ -4,12 +4,12 @@
 \alias{anova_check}
 \title{Check ANOVA Assumptions}
 \usage{
-anova_check(data, continuous, A, B = NULL, interaction = TRUE)
+anova_check(data, outcome, A, B = NULL, interaction = TRUE)
 }
 \arguments{
 \item{data}{Dataframe or tibble.}
 
-\item{continuous}{Unquoted column name for continuous outcome.}
+\item{outcome}{Unquoted column name for continuous outcome.}
 
 \item{A}{Unquoted column name for grouping variable (factor).}
 

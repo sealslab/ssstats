@@ -4,14 +4,14 @@
 \alias{multiple_variances}
 \title{Brown-Forsythe-Levene Test for Equal Variances}
 \usage{
-multiple_variances(data, outcome, A, alpha = 0.05)
+multiple_variances(data, outcome, grouping, alpha = 0.05)
 }
 \arguments{
 \item{data}{A data frame or tibble.}
 
 \item{outcome}{Unquoted column name for the continuous outcome (numeric).}
 
-\item{A}{Unquoted column name for the grouping variable. Must have at least
+\item{grouping}{Unquoted column name for the grouping variable. Must have at least
 2 levels.}
 
 \item{alpha}{Numeric. Significance level between 0 and 1 (exclusive).

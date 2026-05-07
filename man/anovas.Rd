@@ -4,18 +4,30 @@
 \alias{anovas}
 \title{One-Way and Two-Way ANOVA}
 \usage{
-anovas(data, outcome, A, B = NULL, interaction = TRUE, alpha = 0.05)
+anovas(
+  data,
+  outcome,
+  grouping = NULL,
+  A = NULL,
+  B = NULL,
+  interaction = TRUE,
+  alpha = 0.05
+)
 }
 \arguments{
 \item{data}{A data frame or tibble.}
 
 \item{outcome}{Unquoted column name for the continuous outcome (numeric).}
 
-\item{A}{Unquoted column name for factor A (the grouping variable in a
-one-way ANOVA, or the first factor in a two-way ANOVA).}
+\item{grouping}{Unquoted column name for the grouping variable in a one-way
+ANOVA. Ignored when `A` is provided.}
+
+\item{A}{Unquoted column name for factor A (the first factor in a two-way
+ANOVA, or the grouping variable in a one-way ANOVA). When `A` is provided,
+`grouping` is ignored.}
 
 \item{B}{Unquoted column name for the second factor in a two-way ANOVA.
-Omit for a one-way ANOVA.}
+When `A` and `B` are both provided, `grouping` is ignored.}
 
 \item{interaction}{Logical. Only relevant when `B` is specified. If `TRUE`
 (default), fits the model `outcome ~ A * B` (main effects plus

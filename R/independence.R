@@ -5,8 +5,8 @@
 #'   test statistic, p-value, and conclusion.
 #'
 #' @param data A data frame or tibble.
-#' @param var1 Unquoted column name of the first categorical variable.
-#' @param var2 Unquoted column name of the second categorical variable.
+#' @param col1 Unquoted column name of the first categorical variable.
+#' @param col2 Unquoted column name of the second categorical variable.
 #' @param alpha Numeric. Significance level between 0 and 1 (exclusive).
 #'   Defaults to \code{0.05}.
 #'
@@ -19,13 +19,13 @@
 #' @importFrom glue glue
 #' @importFrom stats chisq.test
 #' @importFrom magrittr %>%
-independence <- function(data, var1, var2, alpha = 0.05) {
+independence <- function(data, col1, col2, alpha = 0.05) {
 
   if (!is.numeric(alpha) || alpha <= 0 || alpha >= 1)
     stop("`alpha` must be numeric and between 0 and 1 (exclusive).", call. = FALSE)
 
-  var1_q <- rlang::enquo(var1)
-  var2_q <- rlang::enquo(var2)
+  var1_q <- rlang::enquo(col1)
+  var2_q <- rlang::enquo(col2)
 
   var1_name <- rlang::as_label(var1_q)
   var2_name <- rlang::as_label(var2_q)

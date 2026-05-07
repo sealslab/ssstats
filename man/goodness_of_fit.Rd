@@ -4,12 +4,12 @@
 \alias{goodness_of_fit}
 \title{Chi-Square Goodness-of-Fit Test}
 \usage{
-goodness_of_fit(data, categorical, expected = NULL, alpha = 0.05)
+goodness_of_fit(data, outcome, expected = NULL, alpha = 0.05)
 }
 \arguments{
 \item{data}{A data frame or tibble.}
 
-\item{categorical}{Unquoted column name for the categorical variable.}
+\item{outcome}{Unquoted column name for the outcome (categorical) variable.}
 
 \item{expected}{Named numeric vector of expected proportions, one per
 category level. Names must match the observed category labels and must

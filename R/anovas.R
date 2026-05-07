@@ -8,10 +8,13 @@
 #'
 #' @param data A data frame or tibble.
 #' @param outcome Unquoted column name for the continuous outcome (numeric).
-#' @param A Unquoted column name for factor A (the grouping variable in a
-#'   one-way ANOVA, or the first factor in a two-way ANOVA).
+#' @param grouping Unquoted column name for the grouping variable in a one-way
+#'   ANOVA. Ignored when `A` is provided.
+#' @param A Unquoted column name for factor A (the first factor in a two-way
+#'   ANOVA, or the grouping variable in a one-way ANOVA). When `A` is provided,
+#'   `grouping` is ignored.
 #' @param B Unquoted column name for the second factor in a two-way ANOVA.
-#'   Omit for a one-way ANOVA.
+#'   When `A` and `B` are both provided, `grouping` is ignored.
 #' @param interaction Logical. Only relevant when `B` is specified. If `TRUE`
 #'   (default), fits the model `outcome ~ A * B` (main effects plus
 #'   interaction). If `FALSE`, fits `outcome ~ A + B` (main effects only).
@@ -27,7 +30,8 @@
 #' @importFrom glue glue
 anovas <- function(data,
                    outcome,
-                   A,
+                   grouping    = NULL,
+                   A           = NULL,
                    B           = NULL,
                    interaction = TRUE,
                    alpha       = 0.05) {
@@ -37,21 +41,39 @@ anovas <- function(data,
   if (!is.numeric(alpha) || alpha <= 0 || alpha >= 1)
     stop("`alpha` must be numeric and between 0 and 1 (exclusive).", call. = FALSE)
 
-  outcome_q <- rlang::enquo(outcome)
-  A_q       <- rlang::enquo(A)
-  B_q       <- rlang::enquo(B)
+  outcome_q  <- rlang::enquo(outcome)
+  grouping_q <- rlang::enquo(grouping)
+  A_q        <- rlang::enquo(A)
+  B_q        <- rlang::enquo(B)
+
+  A_provided <- !rlang::quo_is_null(A_q)
+
+  # If A is provided, use A (and optionally B); grouping is ignored.
+  # If A is not provided, fall back to grouping for a one-way ANOVA.
+  if (A_provided) {
+    if (!rlang::quo_is_null(grouping_q))
+      message("`grouping` is ignored when `A` is provided.")
+    factor_q <- A_q
+  } else {
+    if (rlang::quo_is_null(grouping_q))
+      stop("Provide either `grouping` (one-way ANOVA) or `A` (one-way or two-way ANOVA).",
+           call. = FALSE)
+    if (!rlang::quo_is_null(B_q))
+      stop("`B` requires `A` to be specified.", call. = FALSE)
+    factor_q <- grouping_q
+  }
 
   outcome_name <- rlang::as_name(outcome_q)
-  A_name       <- rlang::as_name(A_q)
+  A_name       <- rlang::as_name(factor_q)
 
-  two_way <- !rlang::quo_is_null(B_q)
+  two_way <- A_provided && !rlang::quo_is_null(B_q)
 
   if (!two_way && interaction) {
     message("`interaction` is ignored for one-way ANOVA.")
   }
 
   y <- dplyr::pull(data, !!outcome_q)
-  a <- dplyr::pull(data, !!A_q)
+  a <- dplyr::pull(data, !!factor_q)
 
   if (!is.numeric(y))
     stop(glue::glue("`{outcome_name}` must be a numeric column."), call. = FALSE)
@@ -60,7 +82,7 @@ anovas <- function(data,
     B_name   <- rlang::as_name(B_q)
     b_raw    <- dplyr::pull(data, !!B_q)
     complete <- stats::complete.cases(y, a, b_raw)
-  } else {
+  } else {  
     complete <- stats::complete.cases(y, a)
   }
 

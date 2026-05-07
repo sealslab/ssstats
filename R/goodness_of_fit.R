@@ -5,7 +5,7 @@
 #'   hypotheses, test statistic, p-value, and conclusion.
 #'
 #' @param data A data frame or tibble.
-#' @param categorical Unquoted column name for the categorical variable.
+#' @param outcome Unquoted column name for the outcome (categorical) variable.
 #' @param expected Named numeric vector of expected proportions, one per
 #'   category level. Names must match the observed category labels and must
 #'   sum to 1. If \code{NULL} (default), equal proportions are assumed.
@@ -20,12 +20,12 @@
 #' @importFrom dplyr filter count arrange
 #' @importFrom glue glue
 #' @importFrom magrittr %>%
-goodness_of_fit <- function(data, categorical, expected = NULL, alpha = 0.05) {
+goodness_of_fit <- function(data, outcome, expected = NULL, alpha = 0.05) {
 
   if (!is.numeric(alpha) || alpha <= 0 || alpha >= 1)
     stop("`alpha` must be numeric and between 0 and 1 (exclusive).", call. = FALSE)
 
-  cat_q <- rlang::enquo(categorical)
+  cat_q <- rlang::enquo(outcome)
 
   n_before <- nrow(data)
 
