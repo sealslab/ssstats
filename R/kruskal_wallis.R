@@ -26,14 +26,14 @@
 #' @importFrom glue glue
 kruskal_wallis <- function(data,
                            outcome,
-                           A,
+                           grouping,
                            alpha = 0.05) {
 
   if (!is.numeric(alpha) || alpha <= 0 || alpha >= 1)
     stop("`alpha` must be numeric and between 0 and 1 (exclusive).", call. = FALSE)
 
   outcome_q <- rlang::enquo(outcome)
-  group_q   <- rlang::enquo(A)
+  group_q   <- rlang::enquo(grouping)
 
   outcome_name <- rlang::as_name(outcome_q)
   group_name   <- rlang::as_name(group_q)

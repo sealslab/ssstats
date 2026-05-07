@@ -10,7 +10,7 @@
 #'
 #' @param data A data frame or tibble.
 #' @param outcome Unquoted column name for the continuous outcome (numeric).
-#' @param A Unquoted column name for the grouping variable. Must have at
+#' @param grouping Unquoted column name for the grouping variable. Must have at
 #'   least 2 levels.
 #' @param adjust Logical. If \code{TRUE} (default), applies Type I error
 #'   adjustment (Tukey's HSD for ANOVA; Bonferroni for Kruskal-Wallis). If
@@ -29,12 +29,12 @@
 #' @importFrom rlang enquo as_name `!!`
 #' @importFrom dplyr pull
 #' @importFrom glue glue
-posthoc_test <- function(data,
-                         outcome,
-                         A,
-                         adjust        = TRUE,
-                         nonparametric = FALSE,
-                         alpha         = 0.05) {
+posthoc <- function(data,
+                    outcome,
+                    grouping,
+                    adjust        = TRUE,
+                    nonparametric = FALSE,
+                    alpha         = 0.05) {
 
   if (!is.logical(adjust) || length(adjust) != 1)
     stop("`adjust` must be TRUE or FALSE.", call. = FALSE)
