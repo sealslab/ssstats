@@ -4,18 +4,33 @@
 \alias{anova_check}
 \title{Check ANOVA Assumptions}
 \usage{
-anova_check(data, outcome, A, B = NULL, interaction = TRUE)
+anova_check(
+  data,
+  outcome,
+  grouping = NULL,
+  A = NULL,
+  B = NULL,
+  interaction = TRUE
+)
 }
 \arguments{
-\item{data}{Dataframe or tibble.}
+\item{data}{A data frame or tibble.}
 
-\item{outcome}{Unquoted column name for continuous outcome.}
+\item{outcome}{Unquoted column name for the continuous outcome (numeric).}
 
-\item{A}{Unquoted column name for grouping variable (factor).}
+\item{grouping}{Unquoted column name for the grouping variable in a one-way
+ANOVA. Ignored when `A` is provided.}
 
-\item{B}{Unquoted column name for grouping variable (factor).}
+\item{A}{Unquoted column name for factor A (the first factor in a two-way
+ANOVA, or the grouping variable in a one-way ANOVA). When `A` is provided,
+`grouping` is ignored.}
 
-\item{interaction}{Indicator for inclusion of A:B interaction.}
+\item{B}{Unquoted column name for the second factor in a two-way ANOVA.
+When `A` and `B` are both provided, `grouping` is ignored.}
+
+\item{interaction}{Logical. Only relevant when `B` is specified. If `TRUE`
+(default), fits the model `outcome ~ A * B` (main effects plus
+interaction). If `FALSE`, fits `outcome ~ A + B` (main effects only).}
 }
 \description{
 Fits a one-way or two-way ANOVA model and returns a combined diagnostic plot

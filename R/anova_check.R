@@ -6,11 +6,18 @@
 #' fitted values plot. For two-way models, the interaction term is included by
 #' default but can be suppressed via the \code{interaction} argument.
 #'
-#' @param data Dataframe or tibble.
-#' @param outcome Unquoted column name for continuous outcome.
-#' @param A Unquoted column name for grouping variable (factor).
-#' @param B Unquoted column name for grouping variable (factor).
-#' @param interaction Indicator for inclusion of A:B interaction.
+#' @param data A data frame or tibble.
+#' @param outcome Unquoted column name for the continuous outcome (numeric).
+#' @param grouping Unquoted column name for the grouping variable in a one-way
+#'   ANOVA. Ignored when `A` is provided.
+#' @param A Unquoted column name for factor A (the first factor in a two-way
+#'   ANOVA, or the grouping variable in a one-way ANOVA). When `A` is provided,
+#'   `grouping` is ignored.
+#' @param B Unquoted column name for the second factor in a two-way ANOVA.
+#'   When `A` and `B` are both provided, `grouping` is ignored.
+#' @param interaction Logical. Only relevant when `B` is specified. If `TRUE`
+#'   (default), fits the model `outcome ~ A * B` (main effects plus
+#'   interaction). If `FALSE`, fits `outcome ~ A + B` (main effects only).
 
 #' @export
 #' @importFrom ggplot2 ggplot aes stat_qq stat_qq_line facet_wrap vars theme_bw labs geom_point geom_hline
@@ -21,30 +28,51 @@
 #' @importFrom stats aov as.formula fitted residuals
 #' @importFrom glue glue
 
-anova_check <- function(data, outcome, A, B = NULL, interaction = TRUE) {
+anova_check <- function(data,
+                        outcome,
+                        grouping    = NULL,
+                        A           = NULL,
+                        B           = NULL,
+                        interaction = TRUE) {
 
-  y_q <- rlang::enquo(outcome)
-  A_q <- rlang::enquo(A)
-  B_q <- rlang::enquo(B)
+  y_q        <- rlang::enquo(outcome)
+  grouping_q <- rlang::enquo(grouping)
+  A_q        <- rlang::enquo(A)
+  B_q        <- rlang::enquo(B)
+
+  A_provided <- !rlang::quo_is_null(A_q)
+
+  if (A_provided) {
+    if (!rlang::quo_is_null(grouping_q))
+      message("`grouping` is ignored when `A` is provided.")
+    factor_q <- A_q
+  } else {
+    if (rlang::quo_is_null(grouping_q))
+      stop("Provide either `grouping` (one-way ANOVA) or `A` (one-way or two-way ANOVA).",
+           call. = FALSE)
+    if (!rlang::quo_is_null(B_q))
+      stop("`B` requires `A` to be specified.", call. = FALSE)
+    factor_q <- grouping_q
+  }
 
   y_chr <- rlang::as_name(y_q)
-  A_chr <- rlang::as_name(A_q)
+  A_chr <- rlang::as_name(factor_q)
 
-  two_way <- !rlang::quo_is_null(B_q)
+  two_way <- A_provided && !rlang::quo_is_null(B_q)
   if (two_way) B_chr <- rlang::as_name(B_q)
 
   # Clean data
   if (two_way) {
     df <- data %>%
-      dplyr::select(!!A_q, !!B_q, !!y_q) %>%
-      dplyr::filter(!is.na(!!A_q), !is.na(!!B_q), !is.na(!!y_q)) %>%
+      dplyr::select(!!factor_q, !!B_q, !!y_q) %>%
+      dplyr::filter(!is.na(!!factor_q), !is.na(!!B_q), !is.na(!!y_q)) %>%
       dplyr::mutate(!!A_chr := as.factor(!!rlang::sym(A_chr)),
                     !!B_chr := as.factor(!!rlang::sym(B_chr)))
   } else {
     df <- data %>%
-      dplyr::select(!!A_q, !!y_q) %>%
-      dplyr::filter(!is.na(!!A_q), !is.na(!!y_q)) %>%
-      dplyr::mutate(!!A_q := as.factor(!!A_q))
+      dplyr::select(!!factor_q, !!y_q) %>%
+      dplyr::filter(!is.na(!!factor_q), !is.na(!!y_q)) %>%
+      dplyr::mutate(!!A_chr := as.factor(!!rlang::sym(A_chr)))
   }
 
   # Build formula and fit model
