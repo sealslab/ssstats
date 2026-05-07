@@ -20,7 +20,10 @@
 #' @importFrom dplyr filter count arrange
 #' @importFrom glue glue
 #' @importFrom magrittr %>%
-goodness_of_fit <- function(data, outcome, expected = NULL, alpha = 0.05) {
+goodness_of_fit <- function(data, 
+                            outcome, 
+                            expected = NULL, 
+                            alpha = 0.05) {
 
   if (!is.numeric(alpha) || alpha <= 0 || alpha >= 1)
     stop("`alpha` must be numeric and between 0 and 1 (exclusive).", call. = FALSE)

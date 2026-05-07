@@ -23,7 +23,11 @@
 #' @importFrom glue glue
 #' @importFrom stats glm anova
 #' @importFrom magrittr %>%
-significant_line <- function(data, outcome, function_of, family = gaussian(), alpha = 0.05) {
+significant_line <- function(data, 
+                             outcome, 
+                             function_of, 
+                             family = gaussian(), 
+                             alpha = 0.05) {
 
   if (!is.numeric(alpha) || alpha <= 0 || alpha >= 1)
     stop("`alpha` must be numeric and between 0 and 1 (exclusive).", call. = FALSE)

@@ -20,7 +20,10 @@
 #' @importFrom rlang enquo as_name
 #' @importFrom ggplot2 ggplot aes geom_point labs geom_hline theme_classic
 #' @importFrom stats lm fitted.values residuals
-variance_check <- function(model = NULL, data = NULL, continuous = NULL, function_of = NULL) {
+variance_check <- function(model = NULL, 
+                           data = NULL, 
+                           continuous = NULL, 
+                           function_of = NULL) {
   # Check for model input or data-driven input
   if (!is.null(model)) {
     # Ensure the provided model is valid

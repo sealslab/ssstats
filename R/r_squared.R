@@ -19,7 +19,10 @@
 #' @export
 #' @importFrom rlang enquo as_name
 #' @importFrom stats lm
-r_squared <- function(model = NULL, data = NULL, outcome = NULL, function_of = NULL) {
+r_squared <- function(model = NULL, 
+                      data = NULL, 
+                      outcome = NULL, 
+                      function_of = NULL) {
   # Check for model input or data-driven input
   if (!is.null(model)) {
     # Ensure the provided model is valid

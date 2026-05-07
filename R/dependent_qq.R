@@ -16,7 +16,9 @@
 #' @importFrom ggplot2 ggplot aes stat_qq_line stat_qq theme_bw labs geom_histogram
 #' @importFrom ggpubr ggarrange
 #' @importFrom magrittr %>%
-dependent_qq <- function(data, col1, col2) {
+dependent_qq <- function(data, 
+                         col1, 
+                         col2) {
   # Capture expressions
   var1_q <- rlang::enquo(col1)
   var2_q <- rlang::enquo(col2)

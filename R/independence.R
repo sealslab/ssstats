@@ -19,7 +19,10 @@
 #' @importFrom glue glue
 #' @importFrom stats chisq.test
 #' @importFrom magrittr %>%
-independence <- function(data, col1, col2, alpha = 0.05) {
+independence <- function(data, 
+                         col1, 
+                         col2, 
+                         alpha = 0.05) {
 
   if (!is.numeric(alpha) || alpha <= 0 || alpha >= 1)
     stop("`alpha` must be numeric and between 0 and 1 (exclusive).", call. = FALSE)

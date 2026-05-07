@@ -15,7 +15,9 @@
 #' @importFrom tidyr pivot_longer
 #' @importFrom ggplot2 ggplot aes stat_qq stat_qq_line facet_wrap theme_minimal labs
 #' @importFrom magrittr %>%
-correlation_qq <- function(data, x, y) {
+correlation_qq <- function(data,
+                           x, 
+                           y) {
 
   x_q <- rlang::enquo(x)
   y_q <- rlang::enquo(y)

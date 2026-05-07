@@ -19,7 +19,10 @@
 #' @importFrom dplyr mutate select
 #' @importFrom stats glm
 #' @importFrom magrittr %>%
-logistic_regression <- function(data, outcome, function_of, confidence = 0.95) {
+logistic_regression <- function(data, 
+                                outcome, 
+                                function_of, 
+                                confidence = 0.95) {
 
   # Capture variables
   outcome_expr <- rlang::enexpr(outcome)

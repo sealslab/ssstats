@@ -19,7 +19,10 @@
 #' @importFrom dplyr mutate select
 #' @importFrom stats lm
 #' @importFrom magrittr %>%
-linear_regression <- function(data, outcome, function_of, confidence = 0.95) {
+linear_regression <- function(data, 
+                              outcome, 
+                              function_of, 
+                              confidence = 0.95) {
   # Capture expressions
   outcome_expr <- rlang::enexpr(outcome)
   rhs_expr     <- substitute(function_of)

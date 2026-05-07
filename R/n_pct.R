@@ -25,7 +25,9 @@
 #' @importFrom janitor tabyl adorn_percentages adorn_pct_formatting
 #' @importFrom scales percent
 #' @importFrom magrittr %>%
-n_pct <- function(data, row, col = NULL,
+n_pct <- function(data, 
+                  row, 
+                  col = NULL,
                   show = 10, digits = 1, denom = "col") {
 
   row_var_enquo <- rlang::enquo(row)

@@ -14,7 +14,9 @@
 #' @importFrom dplyr group_by mutate
 #' @importFrom ggplot2 ggplot aes geom_jitter geom_hline labs theme_minimal theme
 #' @importFrom magrittr %>%
-plot_residuals <- function(data, continuous, grouping) {
+plot_residuals <- function(data, 
+                           continuous, 
+                           grouping) {
   grouping_q <- rlang::enquo(grouping)
   outcome_q  <- rlang::enquo(continuous)
 

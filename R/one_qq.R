@@ -12,7 +12,8 @@
 #' @export
 #' @importFrom ggplot2 ggplot aes stat_qq stat_qq_line theme_bw labs
 #' @importFrom rlang enquo as_name `!!`
-one_qq <- function(data, outcome) {
+one_qq <- function(data, 
+                   outcome) {
   var_q   <- rlang::enquo(outcome)
   var_chr <- rlang::as_name(var_q)
 

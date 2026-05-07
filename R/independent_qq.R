@@ -17,7 +17,9 @@
 #' @importFrom ggplot2 ggplot aes stat_qq_line stat_qq theme_bw labs geom_histogram
 #' @importFrom ggpubr ggarrange
 #' @importFrom magrittr %>%
-independent_qq <- function(data, outcome, grouping) {
+independent_qq <- function(data, 
+                           outcome, 
+                           grouping) {
   # Capture variables using tidy evaluation
   variable_q <- rlang::enquo(outcome)
   group_q    <- rlang::enquo(grouping)

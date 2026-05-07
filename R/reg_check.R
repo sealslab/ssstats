@@ -25,7 +25,10 @@
 #' @importFrom stats lm residuals fitted.values rstandard dnorm sd
 #' @export
 
-reg_check <- function(model = NULL, data = NULL, continuous = NULL, function_of = NULL) {
+reg_check <- function(model = NULL, 
+                      data = NULL, 
+                      continuous = NULL, 
+                      function_of = NULL) {
   # Check for model input or data-driven input
   if (!is.null(model)) {
     # Ensure the provided model is valid
