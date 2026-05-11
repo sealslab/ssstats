@@ -4,7 +4,7 @@
 \alias{linear_regression}
 \title{Linear Regression Table}
 \usage{
-linear_regression(data, outcome, function_of, confidence = 0.95)
+linear_regression(data, outcome, function_of, alpha = 0.05)
 }
 \arguments{
 \item{data}{A data frame or tibble.}
@@ -14,8 +14,8 @@ linear_regression(data, outcome, function_of, confidence = 0.95)
 \item{function_of}{An unquoted expression for the right-hand side of the
 model formula (e.g., \code{x1 + x2}).}
 
-\item{confidence}{Numeric confidence level for the CIs. Defaults to
-\code{0.95}.}
+\item{alpha}{Numeric significance level used to compute CIs (e.g., 0.05
+yields 95\% CIs). Defaults to \code{0.05}.}
 }
 \value{
 A tibble with columns \code{Term}, \eqn{\beta} (CI), and

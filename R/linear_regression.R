@@ -7,8 +7,8 @@
 #' @param outcome Unquoted column name for the numeric outcome variable.
 #' @param function_of An unquoted expression for the right-hand side of the
 #'   model formula (e.g., \code{x1 + x2}).
-#' @param confidence Numeric confidence level for the CIs. Defaults to
-#'   \code{0.95}.
+#' @param alpha Numeric significance level used to compute CIs (e.g., 0.05
+#'   yields 95\% CIs). Defaults to \code{0.05}.
 #'
 #' @return A tibble with columns \code{Term}, \eqn{\beta} (CI), and
 #'   \code{p-value}.
@@ -22,7 +22,7 @@
 linear_regression <- function(data, 
                               outcome, 
                               function_of, 
-                              confidence = 0.95) {
+                              alpha = 0.05) {
   # Capture expressions
   outcome_expr <- rlang::enexpr(outcome)
   rhs_expr     <- substitute(function_of)
@@ -34,7 +34,7 @@ linear_regression <- function(data,
   model <- stats::lm(fmla, data = data)
 
   # Dynamic CI column label
-  ci_label <- paste0("\u03b2 (", round(confidence * 100), "% CI)")
+  ci_label <- paste0("\u03b2 (", round((1 - alpha) * 100), "% CI)")
 
   # Helper to combine estimate and CI into one string
   format_beta_ci <- function(estimate, conf.low, conf.high) {
@@ -44,7 +44,7 @@ linear_regression <- function(data,
   }
 
   # Extract and format output
-  broom::tidy(model, conf.int = TRUE, conf.level = confidence) %>%
+  broom::tidy(model, conf.int = TRUE, conf.level = 1 - alpha) %>%
     dplyr::mutate(
       beta_ci = format_beta_ci(estimate, conf.low, conf.high),
       p_value = format.pval(p.value, digits = 3, eps = 0.001)
