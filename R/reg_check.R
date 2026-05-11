@@ -27,7 +27,7 @@
 
 reg_check <- function(model = NULL, 
                       data = NULL, 
-                      continuous = NULL, 
+                      outcome = NULL, 
                       function_of = NULL) {
   # Check for model input or data-driven input
   if (!is.null(model)) {
@@ -35,9 +35,9 @@ reg_check <- function(model = NULL,
     if (!inherits(model, c("lm", "glm", "aov"))) {
       stop("The `model` argument must be a regression model of class 'lm', 'glm', or 'aov'.")
     }
-  } else if (!is.null(data) && !is.null(continuous) && !is.null(function_of)) {
+  } else if (!is.null(data) && !is.null(outcome) && !is.null(function_of)) {
     # Ensure data-driven inputs are provided correctly
-    outcome_q <- rlang::enquo(continuous)
+    outcome_q <- rlang::enquo(outcome)
     group_q <- rlang::enquo(function_of)
     
     # Prepare formula for lm() using data and columns

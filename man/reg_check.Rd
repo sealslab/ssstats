@@ -4,16 +4,16 @@
 \alias{reg_check}
 \title{Diagnostic Plots for Regression Models}
 \usage{
-reg_check(model = NULL, data = NULL, continuous = NULL, function_of = NULL)
+reg_check(model = NULL, data = NULL, outcome = NULL, function_of = NULL)
 }
 \arguments{
 \item{model}{Either a fitted regression model object of class \code{lm}, \code{glm}, or \code{aov},  or \code{NULL} if using \code{data}, \code{continuous}, and \code{function_of}.}
 
 \item{data}{(Optional) A data frame containing the data.}
 
-\item{continuous}{(Optional) The numeric predictor or outcome column in \code{data}.}
-
 \item{function_of}{(Optional) The grouping or explanatory column in \code{data}.}
+
+\item{continuous}{(Optional) The numeric predictor or outcome column in \code{data}.}
 }
 \value{
 A \code{ggpubr} arranged ggplot object containing three diagnostic plots.

@@ -4,7 +4,7 @@
 \alias{logistic_regression}
 \title{Logistic Regression Table}
 \usage{
-logistic_regression(data, outcome, function_of, confidence = 0.95)
+logistic_regression(data, outcome, function_of, alpha = 0.05, exp = TRUE)
 }
 \arguments{
 \item{data}{A data frame or tibble.}
@@ -14,14 +14,18 @@ logistic_regression(data, outcome, function_of, confidence = 0.95)
 \item{function_of}{An unquoted expression for the right-hand side of the
 model formula (e.g., \code{x1 + x2}).}
 
-\item{confidence}{Numeric confidence level for the CIs. Defaults to
-\code{0.95}.}
+\item{alpha}{Numeric significance level used to compute CIs (CI level =
+1 - alpha). Defaults to \code{0.05}.}
+
+\item{exp}{Logical. If \code{TRUE} (default), estimates and CIs are
+exponentiated and the table reports odds ratios. If \code{FALSE}, the
+table reports log-odds (\eqn{\beta}) coefficients.}
 }
 \value{
-A tibble with columns \code{Term}, \eqn{\beta} (CI), and
+A tibble with columns \code{Term}, OR or \eqn{\beta} (CI), and
   \code{p-value}.
 }
 \description{
 Fits a logistic regression model and returns a formatted table
-  of coefficients, confidence intervals, and p-values.
+  of coefficients (or odds ratios), confidence intervals, and p-values.
 }
