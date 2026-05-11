@@ -44,7 +44,7 @@ posthoc <- function(data,
     stop("`alpha` must be numeric and between 0 and 1 (exclusive).", call. = FALSE)
 
   outcome_q <- rlang::enquo(outcome)
-  group_q   <- rlang::enquo(A)
+  group_q   <- rlang::enquo(grouping)
 
   outcome_name <- rlang::as_name(outcome_q)
   group_name   <- rlang::as_name(group_q)
