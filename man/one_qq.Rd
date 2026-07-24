@@ -2,7 +2,7 @@
 % Please edit documentation in R/one_qq.R
 \name{one_qq}
 \alias{one_qq}
-\title{QQ Plot for a Single Variable}
+\title{QQ Plot and Histogram for a Single Variable}
 \usage{
 one_qq(data, outcome)
 }
@@ -12,10 +12,11 @@ one_qq(data, outcome)
 \item{outcome}{Unquoted column name for the numeric variable to plot.}
 }
 \value{
-A \code{ggplot} object.
+A combined \code{ggplot}/\code{ggarrange} object.
 }
 \description{
-Produces a normal QQ plot for a single numeric variable, useful for visually
-  assessing the normality assumption. Points are plotted against theoretical
-  quantiles with a dashed reference line.
+Produces a normal QQ plot alongside a histogram for a single numeric
+  variable, useful for visually assessing the normality assumption. Points are
+  plotted against theoretical quantiles with a dashed reference line, paired with
+  a histogram of the raw values.
 }
