@@ -17,7 +17,7 @@ Description: This package helps students get acclimated to R programming in intr
 License: MIT + file LICENSE
 Encoding: UTF-8
 Imports: broom, dplyr, ggplot2, ggpubr, glue, gt, janitor, magrittr,
-        patchwork, purrr, rlang, scales, tibble, tidyr, tidyselect
+        patchwork, purrr, rlang, scales, tibble, tidyr, tidyselect, BSDA
 Suggests: dunn.test, knitr, palmerpenguins, rmarkdown, tidyverse
 VignetteBuilder: knitr
 NeedsCompilation: no
@@ -25,4 +25,4 @@ Packaged: 2025-07-22 03:26:10 UTC; ihsanbuker
 Author: Ihsan Buker [aut, cre], Samantha Seals [aut]
 Maintainer: Samantha Seals <sseals@uwf.edu>
 URL: https://sealslab.github.io/ssstats/
-Config/roxygen2/version: 8.0.0
+Config/roxygen2/version: 8.1.0
