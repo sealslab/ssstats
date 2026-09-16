@@ -6,7 +6,7 @@
 #'   and interactions in factorial designs.
 #'
 #' @param data A data frame or tibble.
-#' @param continuous Unquoted column name for the continuous outcome (numeric).
+#' @param outcome Unquoted column name for the continuous outcome (numeric).
 #' @param xaxis Unquoted column name for the variable whose levels appear on
 #'   the x-axis.
 #' @param lines Unquoted column name for the variable whose levels define the
