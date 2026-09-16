@@ -9,13 +9,13 @@ profile_plot(data, outcome, xaxis, lines)
 \arguments{
 \item{data}{A data frame or tibble.}
 
+\item{outcome}{Unquoted column name for the continuous outcome (numeric).}
+
 \item{xaxis}{Unquoted column name for the variable whose levels appear on
 the x-axis.}
 
 \item{lines}{Unquoted column name for the variable whose levels define the
 separate lines.}
-
-\item{continuous}{Unquoted column name for the continuous outcome (numeric).}
 }
 \value{
 A \code{ggplot} object.

@@ -7,7 +7,10 @@
 posthoc(
   data,
   outcome,
-  grouping,
+  grouping = NULL,
+  A = NULL,
+  B = NULL,
+  interaction = TRUE,
   adjust = TRUE,
   nonparametric = FALSE,
   alpha = 0.05
@@ -18,8 +21,24 @@ posthoc(
 
 \item{outcome}{Unquoted column name for the continuous outcome (numeric).}
 
-\item{grouping}{Unquoted column name for the grouping variable. Must have at
-least 2 levels.}
+\item{grouping}{Unquoted column name for the grouping variable. Must have
+at least 2 levels. Used for a one-way post-hoc analysis; omit this and
+supply \code{A} and \code{B} instead for a two-way analysis.}
+
+\item{A}{Unquoted column name for the first grouping variable in a
+two-way post-hoc analysis. Must be supplied together with \code{B}.}
+
+\item{B}{Unquoted column name for the second grouping variable in a
+two-way post-hoc analysis. Must be supplied together with \code{A}.}
+
+\item{interaction}{Logical. Only relevant when \code{A} and \code{B} are
+supplied (two-way analysis). If \code{TRUE} (default), fits
+\code{outcome ~ A * B} and prints three blocks: the \code{A} main
+effect, the \code{B} main effect, and the \code{A:B} interaction
+(all pairwise cell-mean comparisons). If \code{FALSE}, fits the additive
+model \code{outcome ~ A + B} instead and prints only the two main-effect
+blocks — no interaction term is fit or compared. Ignored for a one-way
+analysis.}
 
 \item{adjust}{Logical. If \code{TRUE} (default), applies Type I error
 adjustment (Tukey's HSD for ANOVA; Bonferroni for Kruskal-Wallis). If
@@ -28,7 +47,11 @@ Dunn's test for Kruskal-Wallis).}
 
 \item{nonparametric}{Logical. If \code{FALSE} (default), runs ANOVA-based
 post-hoc tests. If \code{TRUE}, runs Dunn's test following a
-Kruskal-Wallis analysis. Requires the \pkg{dunn.test} package.}
+Kruskal-Wallis analysis. Requires the \pkg{dunn.test} package. Not
+available for a two-way analysis (\code{A}/\code{B} supplied) — calling
+with \code{nonparametric = TRUE} and both \code{A} and \code{B} set
+raises an error, since a two-way rank-based post-hoc procedure is not
+implemented in \pkg{ssstats}.}
 
 \item{alpha}{Numeric. Significance level between 0 and 1 (exclusive).
 Defaults to \code{0.05}.}
@@ -39,10 +62,16 @@ Called for its side effect (printed output); returns \code{NULL}
 }
 \description{
 Performs pairwise post-hoc comparisons following a one-way
-  ANOVA or Kruskal-Wallis test. For ANOVA, runs Tukey's HSD when
-  \code{adjust = TRUE} or Fisher's LSD when \code{adjust = FALSE}. For
-  Kruskal-Wallis, runs Dunn's test with Bonferroni adjustment when
-  \code{adjust = TRUE} or without adjustment when \code{adjust = FALSE}.
-  Prints a formatted table of all pairwise comparisons and restates the
-  model the post-hoc follows.
+  ANOVA, a two-way ANOVA, or a Kruskal-Wallis test. For one-way ANOVA, runs
+  Tukey's HSD when \code{adjust = TRUE} or Fisher's LSD when
+  \code{adjust = FALSE}. For a two-way ANOVA (supply \code{A} and \code{B}
+  instead of \code{grouping}), runs the same comparisons separately for
+  both main effects, and — when \code{interaction = TRUE} — for the
+  interaction (all pairwise cell-mean comparisons) as well, using
+  \code{adjust} the same way. Two-way post-hoc testing is only available
+  for the normal-theory (ANOVA) case; the nonparametric two-way case is
+  not implemented. For Kruskal-Wallis, runs Dunn's test with Bonferroni
+  adjustment when \code{adjust = TRUE} or without adjustment when
+  \code{adjust = FALSE}. Prints a formatted table of all pairwise
+  comparisons and restates the model the post-hoc follows.
 }
