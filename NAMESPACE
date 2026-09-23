@@ -10,6 +10,7 @@ export(dependent_means)
 export(dependent_medians)
 export(dependent_proportions)
 export(dependent_qq)
+export(fishers_exact)
 export(glm_table)
 export(goodness_of_fit)
 export(independence)
@@ -130,6 +131,7 @@ importFrom(stats,
   complete.cases,
   cor.test,
   dnorm,
+  fisher.test,
   fitted,
   fitted.values,
   glm,
